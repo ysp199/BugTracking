@@ -74,6 +74,21 @@
     		<groupId>org.apache.tomcat.embed</groupId>
     		<artifactId>tomcat-embed-jasper</artifactId>
  		</dependency>
+ 		<!-- JSTL API -->
+		<dependency>
+    		<groupId>jakarta.servlet.jsp.jstl</groupId>
+    		<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+    		
+		</dependency>
+
+		<!-- JSTL Implementation -->
+		<dependency>
+    		<groupId>org.glassfish.web</groupId>
+    		<artifactId>jakarta.servlet.jsp.jstl</artifactId>
+    		
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
