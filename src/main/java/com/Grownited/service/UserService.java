@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.Grownited.entity.RoleEntity;
@@ -12,6 +13,8 @@ import com.Grownited.entity.UserRoleEntity;
 import com.Grownited.repository.RoleRepository;
 import com.Grownited.repository.UserRepository;
 import com.Grownited.repository.UserRoleRepository;
+
+
 
 @Service
 public class UserService {
@@ -24,6 +27,9 @@ public class UserService {
 
     @Autowired
     private UserRoleRepository userRoleRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     /* =========================
@@ -31,6 +37,7 @@ public class UserService {
        ========================= */
 
     public UserEntity saveUser(UserEntity user) {
+    	user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -118,7 +125,34 @@ public class UserService {
         UserEntity user = findById(userId);
         if (user != null) {
             user.setActive(true);
-            userRepository.save(user);
+            userRepository.save(user); 
         }
     }
-}
+    
+
+        
+
+        public UserEntity authenticate(String email, String password) {
+
+            Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
+
+            if (optionalUser.isEmpty()) {
+                return null;
+            }
+
+            UserEntity user = optionalUser.get();
+
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                return null;
+            }
+
+            if (!user.getActive()) {
+                return null;
+            }
+
+            return user;
+        }}
+    
+    
+   
+

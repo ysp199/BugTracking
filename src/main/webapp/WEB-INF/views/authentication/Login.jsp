@@ -1,5 +1,5 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -34,11 +34,11 @@
 <div class="login-card shadow">
     <h3 class="text-center mb-4">Login</h3>
 
-    <form action="login" method="post">
+    <form action="${pageContext.request.contextPath}/authenticate" method="post">
         <!-- Username / Email -->
         <div class="mb-3">
-            <label class="form-label">Username or Email</label>
-            <input type="text" name="username" class="form-control" required>
+            <label class="form-label">Email</label>
+            <input type="text" name="email" class="form-control" required>
         </div>
 
         <!-- Password -->
@@ -52,6 +52,11 @@
             <button type="submit" class="btn btn-primary">
                 Login
             </button>
+         <c:if test="${not empty error}">
+        <div class="error-message">
+            ${error}
+        </div>
+    </c:if>
         </div>
 
         <!-- Links -->

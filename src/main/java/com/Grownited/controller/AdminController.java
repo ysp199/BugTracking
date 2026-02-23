@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,9 @@ public class AdminController {
     
     @Autowired
     private RoleService roleService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /* =========================
        LIST ALL USERS
@@ -53,12 +57,36 @@ public class AdminController {
     /* =========================
        SAVE USER (CREATE / UPDATE)
        ========================= */
-    @PostMapping("/users/save")
+    @PostMapping("users/save")
     public String saveUser(@ModelAttribute UserEntity user,
                            @RequestParam Integer roleId) {
 
-        user.setActive(true);                 // DEFAULT ACTIVE
-        user.setCreatedAt(LocalDate.now());
+        UserEntity existingUser = null;
+
+        // 🔎 CHECK IF EDIT MODE
+        if (user.getUserId() != null) {
+            existingUser = userService.findById(user.getUserId());
+        }
+
+        // ✅ PASSWORD HANDLING
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            // keep old password on edit
+            if (existingUser != null) {
+                user.setPassword(existingUser.getPassword());
+            }
+        } else {
+            // hash new password
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        // metadata
+        user.setActive(true);
+
+        if (existingUser == null) {
+            user.setCreatedAt(LocalDate.now());
+        } else {
+            user.setCreatedAt(existingUser.getCreatedAt());
+        }
 
         userService.saveUser(user);
         userService.assignRole(user.getUserId(), roleId);
@@ -71,7 +99,7 @@ public class AdminController {
     /* =========================
        SHOW EDIT USER FORM
        ========================= */
-    @GetMapping("/users/edit/{id}")
+    @GetMapping("users/edit/{id}")
     public String editUser(@PathVariable Integer id, Model model) {
 
         UserEntity user = userService.findById(id);
@@ -116,7 +144,7 @@ public class AdminController {
 
         return "admin/dashboard";
     }
-    @GetMapping("/users/toggle-active/{id}")
+    @GetMapping("users/toggle-active/{id}")
     public String toggleUserStatus(@PathVariable Integer id) {
 
         UserEntity user = userService.findById(id);
@@ -128,8 +156,14 @@ public class AdminController {
 
         return "redirect:/admin/users";
     }
-
     
+    
+    
+	@GetMapping("projects")
+	public String showProjects(Model model) {
+		model.addAttribute("page", "projects");
+		return "admin/projects";
+    }
 
 
 }
