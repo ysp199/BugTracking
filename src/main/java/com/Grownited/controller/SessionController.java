@@ -2,9 +2,12 @@ package com.Grownited.controller;
 
 import java.time.LocalDate;
 
+import com.Grownited.service.EmailService;
 import com.Grownited.service.UserService;
 
 import org.springframework.ui.Model;
+
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +42,9 @@ public class SessionController {
 	
 	@Autowired
 	RoleRepository roleRepository;
+	
+	@Autowired
+	EmailService emailService;
 
     SessionController(UserService userService) {
         this.userService = userService;
@@ -59,7 +65,7 @@ public class SessionController {
 	}
 	
 	@PostMapping("register")
-	public String registerUser(@ModelAttribute UserEntity user, Model model) {
+	public String registerUser(@ModelAttribute UserEntity user, Model model) throws MessagingException {
 
 	    if (userService.emailExists(user.getEmail())) {
 	        model.addAttribute("error", "Email already registered");
@@ -83,6 +89,8 @@ public class SessionController {
 	    userRole.setRole(role);
 
 	    userRoleRepository.save(userRole);
+	    
+	    emailService.sendWelcomeMail(user);
 
 	    return "redirect:/login";
 	}

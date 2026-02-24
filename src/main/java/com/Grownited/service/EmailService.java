@@ -1,28 +1,62 @@
 package com.Grownited.service;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.Grownited.entity.UserEntity;
+
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
 
     @Autowired
-    private JavaMailSender javaMailSender;
+    private JavaMailSender javamailSender;
 
-    public void sendMail(UserEntity user){
+    @Autowired
+    private ResourceLoader resourceLoader;
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("parmaryuvrajsingh196@gmail.com");
-        message.setTo(user.getEmail());
-        message.setSubject("Welcome To Btracker");
-        message.setText("Hey" + user.getFirstName()+ "." + "Happy to have you.");
+    public void sendWelcomeMail(UserEntity user) {
 
-        javaMailSender.send(message);
+        try {
+            MimeMessage message = javamailSender.createMimeMessage();
+
+            Resource resource =
+                    resourceLoader.getResource("classpath:templates/welcome-email.html");
+
+            String html;
+            try (InputStream is = resource.getInputStream()) {
+                html = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+            String fullName = user.getFirstName();
+            if (user.getLastName() != null && !user.getLastName().isBlank()) {
+                fullName += " " + user.getLastName();
+            }
+
+            String body = html
+                    .replace("{{fullName}}", fullName)
+                    .replace("{{email}}", user.getEmail())
+                    .replace("{{loginUrl}}", "http://localhost:9999/login");
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(user.getEmail());
+            helper.setSubject("Welcome to Bug Tracker 🚀");
+            helper.setText(body, true);
+
+            javamailSender.send(message);
+
+        } catch (Exception e) {
+            e.printStackTrace(); // replace with logger in real app
+        }
     }
 }
-
