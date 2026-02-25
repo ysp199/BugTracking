@@ -2,7 +2,9 @@ package com.Grownited.controller;
 
 import java.time.LocalDate;
 
+
 import com.Grownited.service.EmailService;
+import com.Grownited.service.OtpService;
 import com.Grownited.service.UserService;
 
 import org.springframework.ui.Model;
@@ -45,6 +47,9 @@ public class SessionController {
 	
 	@Autowired
 	EmailService emailService;
+	
+	@Autowired
+	OtpService otpService;
 
     SessionController(UserService userService) {
         this.userService = userService;
@@ -145,5 +150,100 @@ public class SessionController {
 	public String logout(HttpSession session) {
 		session.invalidate();
 		return "authentication/Login";}
+	
+	
+	
+
+	@PostMapping("forgot-password")
+	public String forgotPassword(@RequestParam String email, Model model) {
+
+		UserEntity user = userService.findByEmail(email);
+
+		if (user == null) {
+			model.addAttribute("error", "No account found with this email.");
+			return "authentication/ForgetPassword";
+		}
+
+		// Generate and save OTP
+		String otp = otpService.generateOtp();
+		otpService.saveOtp(user, otp);
+
+		// Send OTP via email
+		try {
+			emailService.sendForgotPasswordOtp(user, otp);
+		} catch (Exception e) {
+			model.addAttribute("error", "Failed to send OTP email. Please try again.");
+			return "authentication/ForgetPassword";
+		}
+
+		model.addAttribute("email", email);
+		model.addAttribute("message", "An OTP has been sent to your email.");
+		return "authentication/VerifyOtp";
+	}
+
+
+	@GetMapping("verify-otp")
+	public String showVerifyOtpPage(@RequestParam String email, Model model) {
+		model.addAttribute("email", email);
+		return "authentication/VerifyOtp";
+	}
+
+	@PostMapping("verify-otp")
+	public String verifyOtp(
+			@RequestParam String email,
+			@RequestParam String otp,
+			Model model) {
+
+		boolean valid = otpService.validateOtp(email, otp);
+
+		if (!valid) {
+			model.addAttribute("email", email);
+			model.addAttribute("error", "Invalid OTP. Please try again.");
+			return "authentication/VerifyOtp";
+		}
+
+		// Clear OTP after successful verification
+		UserEntity user = userService.findByEmail(email);
+		otpService.clearOtp(user);
+
+		model.addAttribute("email", email);
+		model.addAttribute("message", "OTP verified! Set your new password.");
+		return "authentication/ResetPassword";
+	}
+
+
+
+	@GetMapping("reset-password")
+	public String showResetPasswordPage(@RequestParam String email, Model model) {
+		model.addAttribute("email", email);
+		return "authentication/ResetPassword";
+	}
+
+	@PostMapping("reset-password")
+	public String resetPassword(
+			@RequestParam String email,
+			@RequestParam String newPassword,
+			@RequestParam String confirmPassword,
+			Model model) {
+
+		if (!newPassword.equals(confirmPassword)) {
+			model.addAttribute("email", email);
+			model.addAttribute("error", "Passwords do not match.");
+			return "authentication/ResetPassword";
+		}
+
+		UserEntity user = userService.findByEmail(email);
+
+		if (user == null) {
+			model.addAttribute("error", "User not found.");
+			return "authentication/ForgetPassword";
+		}
+
+		userService.updatePassword(user, newPassword);
+
+		model.addAttribute("success", "Password reset successfully! Please login.");
+		return "authentication/Login";
+	}
 }
+
 

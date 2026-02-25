@@ -128,30 +128,44 @@ public class UserService {
             userRepository.save(user); 
         }
     }
-    
 
-        
+    /**
+     * Encodes a raw password using BCrypt.
+     */
+    public String encodePassword(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
+    }
 
-        public UserEntity authenticate(String email, String password) {
+    /**
+     * Updates a user's password (hashes it first).
+     */
+    public void updatePassword(UserEntity user, String newRawPassword) {
+        user.setPassword(passwordEncoder.encode(newRawPassword));
+        userRepository.save(user);
+    }
 
-            Optional<UserEntity> optionalUser = userRepository.findByEmail(email);
+    /**
+     * Authenticates a user by email and password.
+     * Returns the user entity if credentials are valid, null otherwise.
+     */
+    public UserEntity authenticate(String email, String password) {
 
-            if (optionalUser.isEmpty()) {
-                return null;
-            }
+        Optional<UserEntity> userOpt = userRepository.findByEmail(email);
 
-            UserEntity user = optionalUser.get();
+        if (userOpt.isEmpty())
+            return null;
 
-            if (!passwordEncoder.matches(password, user.getPassword())) {
-                return null;
-            }
+        UserEntity user = userOpt.get();
 
-            if (!user.getActive()) {
-                return null;
-            }
+        if (!user.getActive())
+            return null;
 
-            return user;
-        }}
+        if (!passwordEncoder.matches(password, user.getPassword()))
+            return null;
+
+        return user;
+    }
+}
     
     
    

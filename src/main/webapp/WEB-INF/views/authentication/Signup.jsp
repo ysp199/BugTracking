@@ -32,7 +32,9 @@
 <div class="signup-card shadow">
     <h3 class="text-center mb-4">Create Account</h3>
 
-    <form action="${pageContext.request.contextPath}/register" method="post">
+    <form action="${pageContext.request.contextPath}/register"
+      method="post"
+      enctype="multipart/form-data">
 
         <!-- First Name -->
         <div class="mb-3">
@@ -85,18 +87,12 @@
 
         <!-- Profile Picture URL -->
         <div class="mb-3">
-            <label class="form-label">Profile Picture URL</label>
-            <input type="text" name="profilePicurl"
-                   class="form-control"
-                   placeholder="https://example.com/profile.jpg">
-        </div>
-
-        <!-- OTP (Optional) -->
-        <div class="mb-3">
-            <label class="form-label">OTP (Optional)</label>
-            <input type="text" name="otp"
+            <label class="form-label">Profile Picture </label>
+            <input type="file" name="profilePic"
                    class="form-control">
         </div>
+
+       
 
         <!-- Submit -->
         <div class="d-grid">

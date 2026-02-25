@@ -26,9 +26,9 @@ public class BugTrackingApplication {
 	@Bean
 	Cloudinary getCloudinary() {
 		Map<String, String> config = new HashMap<>();
-		config.put("cloud_name", "");
-		config.put("api_key", "");
-		config.put("api_secret", "");
+		config.put("cloud_name", "dzmzld3lh");
+		config.put("api_key", "148234635586574");
+		config.put("api_secret", "7j01XiqCs3C3xPoHmQNzmSu7R5o");
 		return new Cloudinary(config);
 	}
 
