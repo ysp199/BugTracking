@@ -7,20 +7,21 @@ import java.time.LocalDate;
 @Table(name = "time_logs")
 public class TimeLogEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer logId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer logId;
 
-    private Double hoursSpent;
-    private LocalDate logDate;
+	private Double hoursSpent;
+	private LocalDate logDate;
+	private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id")
-    private TaskEntity task;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "task_id")
+	private TaskEntity task;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private UserEntity user;
 
 	public Integer getLogId() {
 		return logId;
@@ -28,6 +29,14 @@ public class TimeLogEntity {
 
 	public void setLogId(Integer logId) {
 		this.logId = logId;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public Double getHoursSpent() {
@@ -62,7 +71,4 @@ public class TimeLogEntity {
 		this.user = user;
 	}
 
-    
-    
-    
 }

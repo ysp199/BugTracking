@@ -93,7 +93,7 @@
           <!-- Profile Picture URL -->
           <div class="mb-3">
             <label class="form-label">Profile Picture URL</label>
-            <input type="text" name="profilePicurl"
+            <input type="file" name="profilePicurl"
                    class="form-control"
                    value="${user.profilePicURl}">
           </div>

@@ -14,36 +14,53 @@ import com.Grownited.repository.RoleRepository;
 import com.Grownited.repository.UserRepository;
 import com.Grownited.repository.UserRoleRepository;
 
-
-
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private RoleRepository roleRepository;
 
     @Autowired
     private UserRoleRepository userRoleRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-
-    /* =========================
-       CREATE / UPDATE USER
-       ========================= */
+    /*
+     * =========================
+     * CREATE / UPDATE USER
+     * =========================
+     */
 
     public UserEntity saveUser(UserEntity user) {
-    	user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        return userRepository.save(user); // DO NOT encode here
     }
 
-    /* =========================
-       FIND USER
-       ========================= */
+    /*
+     * =========================
+     * DELETE USER (SAFE)
+     * =========================
+     */
+    public void deleteUserById(Integer userId) {
+
+        UserRoleEntity userRole = userRoleRepository.findByUser_UserId(userId);
+
+        if (userRole != null && "ADMIN".equalsIgnoreCase(userRole.getRole().getRoleName())) {
+            throw new RuntimeException("ADMIN_DELETE_NOT_ALLOWED");
+        }
+
+        userRoleRepository.deleteByUser_UserId(userId);
+        userRepository.deleteById(userId);
+    }
+
+    /*
+     * =========================
+     * FIND USER
+     * =========================
+     */
 
     public UserEntity findByEmail(String email) {
         Optional<UserEntity> userOpt = userRepository.findByEmail(email);
@@ -54,28 +71,54 @@ public class UserService {
         return userRepository.findById(userId).orElse(null);
     }
 
-    /* =========================
-       LIST USERS (ADMIN)
-       ========================= */
+    /*
+     * =========================
+     * LIST USERS (ADMIN)
+     * =========================
+     */
 
     public List<UserEntity> findAllUsers() {
         return userRepository.findAll();
     }
 
-    /* =========================
-       VALIDATIONS
-       ========================= */
+    public List<UserEntity> findUsersByRole(Integer roleId) {
+        return userRepository.findByRoleId(roleId);
+    }
+
+    public List<UserEntity> findUsersByProject(Integer projectId) {
+        return userRepository.findByProjectId(projectId);
+    }
+
+    public List<UserEntity> findUsersByRoleAndProject(Integer roleId, Integer projectId) {
+        return userRepository.findByRoleIdAndProjectId(roleId, projectId);
+    }
+
+    public String getUserRoleName(Integer userId) {
+
+        UserRoleEntity userRole = userRoleRepository.findByUser_UserId(userId);
+
+        if (userRole != null && userRole.getRole() != null) {
+            return userRole.getRole().getRoleName();
+        }
+
+        return "N/A";
+    }
+
+    /*
+     * =========================
+     * VALIDATIONS
+     * =========================
+     */
 
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
-        
+
     }
 
     public void assignRole(Integer userId, Integer roleId) {
 
         // Check if mapping already exists
-        boolean alreadyAssigned =
-                userRoleRepository.existsByUser_UserIdAndRole_RoleId(userId, roleId);
+        boolean alreadyAssigned = userRoleRepository.existsByUser_UserIdAndRole_RoleId(userId, roleId);
 
         if (alreadyAssigned) {
             return; // do nothing if already assigned
@@ -99,8 +142,7 @@ public class UserService {
 
     public Integer getUserRoleId(Integer userId) {
 
-        UserRoleEntity userRole =
-                userRoleRepository.findByUser_UserId(userId);
+        UserRoleEntity userRole = userRoleRepository.findByUser_UserId(userId);
 
         if (userRole != null) {
             return userRole.getRole().getRoleId();
@@ -109,9 +151,11 @@ public class UserService {
         return null;
     }
 
-    /* =========================
-       ACCOUNT STATUS
-       ========================= */
+    /*
+     * =========================
+     * ACCOUNT STATUS
+     * =========================
+     */
 
     public void deactivateUser(Integer userId) {
         UserEntity user = findById(userId);
@@ -125,7 +169,7 @@ public class UserService {
         UserEntity user = findById(userId);
         if (user != null) {
             user.setActive(true);
-            userRepository.save(user); 
+            userRepository.save(user);
         }
     }
 
@@ -166,7 +210,3 @@ public class UserService {
         return user;
     }
 }
-    
-    
-   
-

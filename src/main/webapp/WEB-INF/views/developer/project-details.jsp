@@ -1,0 +1,111 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+    <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+            <jsp:include page="../common/header.jsp" />
+        </head>
+
+        <body>
+            <div class="container-fluid">
+                <div class="row">
+                    <jsp:include page="../common/sidebar-developer.jsp">
+                        <jsp:param name="page" value="my-projects" />
+                    </jsp:include>
+                    <main class="col-md-9 ms-sm-auto col-lg-10 px-4 py-3">
+                        <jsp:include page="../common/topbar.jsp">
+                            <jsp:param name="title" value="Project Details" />
+                        </jsp:include>
+
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                                    <div class="card-header bg-white border-bottom p-3">
+                                        <h6 class="mb-0 fw-bold"><i
+                                                class="bi bi-info-circle text-primary me-2"></i>Project Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block mb-1">Project Name</label>
+                                            <span class="fw-bold fs-5 text-dark">${project.projectName}</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block mb-1">Status</label>
+                                            <c:choose>
+                                                <c:when test="${project.status == 'ACTIVE'}"><span
+                                                        class="badge bg-success-subtle text-success rounded-pill px-3">Active</span>
+                                                </c:when>
+                                                <c:when test="${project.status == 'COMPLETED'}"><span
+                                                        class="badge bg-primary-subtle text-primary rounded-pill px-3">Completed</span>
+                                                </c:when>
+                                                <c:otherwise><span
+                                                        class="badge bg-secondary-subtle text-secondary rounded-pill px-3">${project.status
+                                                        != null ? project.status : 'N/A'}</span></c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block mb-1">Description</label>
+                                            <p class="text-dark mb-0">${project.description}</p>
+                                        </div>
+                                        <div class="mb-0">
+                                            <label class="text-muted small d-block mb-1">Created By</label>
+                                            <span class="text-dark">${project.createdBy.firstName}
+                                                ${project.createdBy.lastName}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card shadow-sm border-0 rounded-4">
+                                    <div
+                                        class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold"><i class="bi bi-stack text-primary me-2"></i>Project
+                                            Modules</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">ID</th>
+                                                        <th>Module Name</th>
+                                                        <th>Description</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="m" items="${modules}">
+                                                        <tr>
+                                                            <td class="ps-4 text-muted">#${m.moduleId}</td>
+                                                            <td class="fw-bold text-dark">${m.moduleName}</td>
+                                                            <td class="text-muted text-truncate"
+                                                                style="max-width: 300px;">${m.description}</td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                    <c:if test="${empty modules}">
+                                                        <tr>
+                                                            <td colspan="3" class="p-4 text-center text-muted">No
+                                                                modules defined for this project.</td>
+                                                        </tr>
+                                                    </c:if>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="${pageContext.request.contextPath}/developer/my-projects"
+                                class="btn btn-outline-secondary rounded-pill px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Back to My Projects
+                            </a>
+                        </div>
+                    </main>
+                </div>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        </body>
+
+        </html>

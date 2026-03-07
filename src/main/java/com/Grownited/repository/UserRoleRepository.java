@@ -7,6 +7,8 @@ public interface UserRoleRepository extends JpaRepository<UserRoleEntity, Intege
 
     boolean existsByUser_UserIdAndRole_RoleId(Integer userId, Integer roleId);
     UserRoleEntity findByUser_UserId(Integer userId);
+    
+    void deleteByUser_UserId(Integer userId);
 
 
 }

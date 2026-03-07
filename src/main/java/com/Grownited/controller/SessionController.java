@@ -1,11 +1,13 @@
 package com.Grownited.controller;
 
+import java.io.IOException;
 import java.time.LocalDate;
-
+import java.util.Map;
 
 import com.Grownited.service.EmailService;
 import com.Grownited.service.OtpService;
 import com.Grownited.service.UserService;
+import com.cloudinary.Cloudinary;
 
 import org.springframework.ui.Model;
 
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.Grownited.entity.RoleEntity;
 import com.Grownited.entity.UserEntity;
@@ -29,130 +32,169 @@ import com.Grownited.repository.UserRoleRepository;
 
 @Controller
 public class SessionController {
-	
+
 	@Autowired
-    private final UserService userService;
-	
+	private final UserService userService;
+
 	@Autowired
 	UserRepository userRepository;
-	
+
 	@Autowired
 	PasswordEncoder passwordEncoder;
-	
+
 	@Autowired
 	UserRoleRepository userRoleRepository;
-	
+
 	@Autowired
 	RoleRepository roleRepository;
-	
+
 	@Autowired
 	EmailService emailService;
-	
+
 	@Autowired
 	OtpService otpService;
 
-    SessionController(UserService userService) {
-        this.userService = userService;
-    }
+	@Autowired
+	Cloudinary cloudinary;
+
+	SessionController(UserService userService) {
+		this.userService = userService;
+	}
+
 	@GetMapping("signup")
 	public String openSignupPage() {
-		return "authentication/Signup"; //jspName
+		return "authentication/Signup"; // jspName
 	}
-	
+
 	@GetMapping("login")
 	public String openLoginPage() {
-		return "authentication/Login"; //jspName
+		return "authentication/Login"; // jspName
 	}
-	
+
 	@GetMapping("forgetPassword")
 	public String openForgetPassPage() {
-		return "authentication/ForgetPassword"; //jspName
+		return "authentication/ForgetPassword"; // jspName
 	}
-	
+
 	@PostMapping("register")
-	public String registerUser(@ModelAttribute UserEntity user, Model model) throws MessagingException {
+	public String registerUser(@ModelAttribute UserEntity user,
+			@RequestParam(name = "selectedRole", required = false) String selectedRole, Model model,
+			MultipartFile profilePic)
+			throws MessagingException {
 
-	    if (userService.emailExists(user.getEmail())) {
-	        model.addAttribute("error", "Email already registered");
-	        return "authentication/Signup";
-	    }
+		if (userService.emailExists(user.getEmail())) {
+			model.addAttribute("error", "Email already registered");
+			return "authentication/Signup";
+		}
 
-	    user.setActive(true);
-	    user.setCreatedAt(LocalDate.now());
+		if (selectedRole == null || selectedRole.trim().isEmpty() || selectedRole.equals("ADMIN")) {
+			model.addAttribute("error", "Invalid or missing role selection.");
+			return "authentication/Signup";
+		}
 
-	    // password hashing happens inside service
-	    userService.saveUser(user);
+		user.setActive(true);
+		user.setCreatedAt(LocalDate.now());
 
-	    // ✅ FETCH ROLE CORRECTLY
-	    RoleEntity role = roleRepository
-	            .findByRoleName("DEVELOPER")
-	            .orElseThrow(() -> new RuntimeException("Role not found"));
+		// password hashing before saving
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		userService.saveUser(user);
 
-	    // ✅ ASSIGN ROLE
-	    UserRoleEntity userRole = new UserRoleEntity();
-	    userRole.setUser(user);
-	    userRole.setRole(role);
+		// ✅ FETCH ROLE CORRECTLY DYNAMICALLY
+		RoleEntity role = roleRepository
+				.findByRoleName(selectedRole)
+				.orElseThrow(() -> new RuntimeException("Role not found: " + selectedRole));
 
-	    userRoleRepository.save(userRole);
-	    
-	    emailService.sendWelcomeMail(user);
+		// ✅ ASSIGN ROLE
+		UserRoleEntity userRole = new UserRoleEntity();
+		userRole.setUser(user);
+		userRole.setRole(role);
 
-	    return "redirect:/login";
+		try {
+			if (profilePic != null && !profilePic.isEmpty()) {
+				Map map = cloudinary.uploader().upload(profilePic.getBytes(), null);
+				String profilePicURl = map.get("secure_url").toString();
+				user.setProfilePicURl(profilePicURl);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		userRoleRepository.save(userRole);
+
+		emailService.sendWelcomeMail(user);
+
+		return "redirect:/login";
 	}
-	
-	
-		
+
 	@PostMapping("authenticate")
 	public String login(
-	        @RequestParam String email,
-	        @RequestParam String password,
-	        HttpSession session,
-	        Model model) {
-		
+			@RequestParam String email,
+			@RequestParam String password,
+			HttpSession session,
+			Model model) {
+
 		email = email.trim().toLowerCase();
-		
-	    UserEntity user = userService.authenticate(email, password);
 
-	    if (user == null) {
-	        model.addAttribute("error", "Invalid email or password");
-	        return "authentication/Login";
-	    }
+		UserEntity user = userService.authenticate(email, password);
 
-	    if (user.getRoles() == null || user.getRoles().isEmpty()) {
-	        session.invalidate();
-	        model.addAttribute("error", "No role assigned to user");
-	        return "authentication/Login";
-	    }
+		if (user == null) {
+			model.addAttribute("error", "Invalid email or password");
+			return "authentication/Login";
+		}
 
-	    UserRoleEntity userRole = user.getRoles().get(0);
-	    String roleName = userRole.getRole().getRoleName();
+		if (user.getRoles() == null || user.getRoles().isEmpty()) {
+			session.invalidate();
+			model.addAttribute("error", "No role assigned to user");
+			return "authentication/Login";
+		}
 
-	    session.setAttribute("loggedInUser", user);
-	    session.setAttribute("role", roleName);
+		UserRoleEntity userRole = user.getRoles().get(0);
+		String roleName = userRole.getRole().getRoleName();
 
-	    switch (roleName) {
-	        case "ADMIN":
-	            return "redirect:/admin/dashboard";
-	        case "PROJECT_MANAGER":
-	            return "redirect:/pm/dashboard";
-	        case "DEVELOPER":
-	            return "redirect:/developer/dashboard";
-	        case "TESTER":
-	            return "redirect:/tester/dashboard";
-	        default:
-	            session.invalidate();
-	            model.addAttribute("error", "Role not supported");
-	            return "authentication/Login";
-	    }
+		user.setRoleName(roleName);
+
+		session.setAttribute("loggedInUser", user);
+		session.setAttribute("role", roleName);
+
+		switch (roleName) {
+			case "ADMIN":
+				return "redirect:/admin/dashboard";
+			case "PROJECT_MANAGER":
+				return "redirect:/pm/dashboard";
+			case "DEVELOPER":
+				return "redirect:/developer/dashboard";
+			case "TESTER":
+				return "redirect:/tester/dashboard";
+			default:
+				session.invalidate();
+				model.addAttribute("error", "Role not supported");
+				return "authentication/Login";
+		}
 	}
-	
+
 	@GetMapping("logout")
 	public String logout(HttpSession session) {
 		session.invalidate();
-		return "authentication/Login";}
-	
-	
-	
+		return "authentication/Login";
+	}
+
+	@GetMapping("/profile")
+	public String viewProfile(HttpSession session, Model model) {
+
+		UserEntity user = (UserEntity) session.getAttribute("loggedInUser");
+
+		if (user == null) {
+			return "redirect:/login";
+		}
+
+		String roleName = userService.getUserRoleName(user.getUserId());
+
+		model.addAttribute("user", user);
+		model.addAttribute("roleName", roleName);
+
+		return "admin/view-user"; // reuse same JSP
+	}
 
 	@PostMapping("forgot-password")
 	public String forgotPassword(@RequestParam String email, Model model) {
@@ -180,7 +222,6 @@ public class SessionController {
 		model.addAttribute("message", "An OTP has been sent to your email.");
 		return "authentication/VerifyOtp";
 	}
-
 
 	@GetMapping("verify-otp")
 	public String showVerifyOtpPage(@RequestParam String email, Model model) {
@@ -210,8 +251,6 @@ public class SessionController {
 		model.addAttribute("message", "OTP verified! Set your new password.");
 		return "authentication/ResetPassword";
 	}
-
-
 
 	@GetMapping("reset-password")
 	public String showResetPasswordPage(@RequestParam String email, Model model) {
@@ -245,5 +284,3 @@ public class SessionController {
 		return "authentication/Login";
 	}
 }
-
-

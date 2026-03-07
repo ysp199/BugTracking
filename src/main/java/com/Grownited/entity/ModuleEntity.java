@@ -2,23 +2,35 @@ package com.Grownited.entity;
 
 import jakarta.persistence.*;
 
-
 @Entity
-@Table(name = "modules" )
+@Table(name = "modules")
 public class ModuleEntity {
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer moduleId;
-	
-	@Column(nullable = false)
-    private String moduleName;
-	
-    private String description;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer moduleId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id")
-    private ProjectEntity project;
+	@Column(nullable = false)
+	private String moduleName;
+
+	private String description;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "project_id")
+	private ProjectEntity project;
+
+	@OneToMany(mappedBy = "module", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private java.util.List<TaskEntity> tasks;
+
+	private Integer estimatedHours;
+
+	public java.util.List<TaskEntity> getTasks() {
+		return tasks;
+	}
+
+	public void setTasks(java.util.List<TaskEntity> tasks) {
+		this.tasks = tasks;
+	}
 
 	public Integer getModuleId() {
 		return moduleId;
@@ -51,6 +63,22 @@ public class ModuleEntity {
 	public void setProject(ProjectEntity project) {
 		this.project = project;
 	}
-    
-    
+
+	public Integer getEstimatedHours() {
+		return estimatedHours;
+	}
+
+	public void setEstimatedHours(Integer estimatedHours) {
+		this.estimatedHours = estimatedHours;
+	}
+
+	public Integer getTotalTaskHours() {
+		if (tasks == null || tasks.isEmpty()) {
+			return 0;
+		}
+		return tasks.stream()
+				.filter(t -> t.getEstimatedHours() != null)
+				.mapToInt(TaskEntity::getEstimatedHours)
+				.sum();
+	}
 }
