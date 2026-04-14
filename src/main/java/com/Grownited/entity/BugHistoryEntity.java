@@ -7,22 +7,25 @@ import java.time.LocalDateTime;
 @Table(name = "bug_history")
 public class BugHistoryEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer historyId;
-	
-    private String oldStatus;
-    private String newStatus;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer historyId;
 
-    private LocalDateTime changedAt = LocalDateTime.now();
+	private String oldStatus;
+	private String newStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bug_id")
-    private BugEntity bug;
+	@Column(columnDefinition = "TEXT")
+	private String notes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "changed_by")
-    private UserEntity changedBy;
+	private LocalDateTime changedAt = LocalDateTime.now();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "bug_id")
+	private BugEntity bug;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "changed_by")
+	private UserEntity changedBy;
 
 	public Integer getHistoryId() {
 		return historyId;
@@ -46,6 +49,14 @@ public class BugHistoryEntity {
 
 	public void setNewStatus(String newStatus) {
 		this.newStatus = newStatus;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 
 	public LocalDateTime getChangedAt() {
@@ -72,6 +83,4 @@ public class BugHistoryEntity {
 		this.changedBy = changedBy;
 	}
 
-    
-    
 }

@@ -24,6 +24,10 @@ import com.Grownited.entity.BugHistoryEntity;
 import com.Grownited.entity.BugEntity;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.multipart.MultipartFile;
+import com.cloudinary.Cloudinary;
+import java.io.IOException;
+import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +52,9 @@ public class DeveloperController {
 
     @Autowired
     private BugHistoryRepository bugHistoryRepository;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     private UserEntity getLoggedInUser(HttpSession session) {
         return (UserEntity) session.getAttribute("loggedInUser");
@@ -169,7 +176,9 @@ public class DeveloperController {
     }
 
     @PostMapping("/bugs/{id}/status")
-    public String updateBugStatus(@PathVariable Integer id, @RequestParam("status") String status,
+    public String updateBugStatus(@PathVariable Integer id,
+            @RequestParam("status") String status,
+            @RequestParam(value = "notes", required = false) String notes,
             HttpSession session) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("DEVELOPER")) {
@@ -183,6 +192,12 @@ public class DeveloperController {
         if (bug != null) {
             String oldStatus = bug.getStatus();
             bug.setStatus(status);
+
+            // Reassign back to the tester if the bug is fixed
+            if ("FIXED".equals(status) && bug.getReportedBy() != null) {
+                bug.setAssignedTo(bug.getReportedBy());
+            }
+
             bugRepository.save(bug);
 
             // Record History
@@ -191,10 +206,33 @@ public class DeveloperController {
             history.setOldStatus(oldStatus);
             history.setNewStatus(status);
             history.setChangedBy(user);
+            if (notes != null && !notes.trim().isEmpty()) {
+                history.setNotes(notes.trim());
+            }
             bugHistoryRepository.save(history);
         }
 
         return "redirect:/developer/bugs?success=Status+Updated";
+    }
+
+    @GetMapping("/reopened-bugs")
+    public String reopenedBugs(HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("DEVELOPER")) {
+            return "redirect:/login";
+        }
+        UserEntity user = getLoggedInUser(session);
+        if (user == null)
+            return "redirect:/login";
+
+        var myReopenedBugs = bugRepository.findAll().stream()
+                .filter(b -> b.getAssignedTo() != null && b.getAssignedTo().getUserId().equals(user.getUserId())
+                        && "REOPENED".equals(b.getStatus()))
+                .collect(Collectors.toList());
+
+        model.addAttribute("bugs", myReopenedBugs);
+        model.addAttribute("page", "reopened-bugs");
+        return "developer/reopened-bugs";
     }
 
     @GetMapping("/bugs/add")
@@ -220,6 +258,7 @@ public class DeveloperController {
     @PostMapping("/bugs/save")
     public String saveBug(@ModelAttribute com.Grownited.entity.BugEntity bug,
             @RequestParam("taskId") Integer taskId,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             HttpSession session) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("DEVELOPER")) {
@@ -233,8 +272,23 @@ public class DeveloperController {
         bug.setTask(task);
         bug.setReportedBy(user);
         bug.setStatus("OPEN");
-        // AssignedTo can be left null initially or assigned to PM/Tester etc., we leave
-        // it null for picking up or assign back to dev.
+
+        // Auto-assign to the person already working on the task
+        if (task != null && task.getAssignedTo() != null) {
+            bug.setAssignedTo(task.getAssignedTo());
+        }
+
+        try {
+            if (file != null && !file.isEmpty()) {
+                @SuppressWarnings("rawtypes")
+                Map map = cloudinary.uploader().upload(file.getBytes(), null);
+                String attachmentUrl = map.get("secure_url").toString();
+                bug.setAttachment(attachmentUrl);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         bugRepository.save(bug);
 
         return "redirect:/developer/bugs?success=Bug+Reported+Successfully";
@@ -273,11 +327,16 @@ public class DeveloperController {
                 .filter(t -> t.getAssignedTo() != null && t.getAssignedTo().getUserId().equals(user.getUserId()))
                 .collect(Collectors.toList());
 
+        var myBugs = bugRepository.findAll().stream()
+                .filter(b -> b.getAssignedTo() != null && b.getAssignedTo().getUserId().equals(user.getUserId()))
+                .collect(Collectors.toList());
+
         var myLogs = timeLogRepository.findAll().stream()
                 .filter(l -> l.getUser() != null && l.getUser().getUserId().equals(user.getUserId()))
                 .collect(Collectors.toList());
 
         model.addAttribute("tasks", myTasks);
+        model.addAttribute("bugs", myBugs);
         model.addAttribute("logs", myLogs);
         model.addAttribute("page", "timelog");
         return "developer/timelog";
@@ -285,7 +344,8 @@ public class DeveloperController {
 
     @PostMapping("/timelog/save")
     public String saveTimelog(@ModelAttribute TimeLogEntity timeLog,
-            @RequestParam("taskId") Integer taskId,
+            @RequestParam(value = "taskId", required = false) Integer taskId,
+            @RequestParam(value = "bugId", required = false) Integer bugId,
             HttpSession session) {
 
         String sessionRole = (String) session.getAttribute("role");
@@ -296,8 +356,15 @@ public class DeveloperController {
         if (user == null)
             return "redirect:/login";
 
-        var task = taskRepository.findById(taskId).orElse(null);
-        timeLog.setTask(task);
+        if (taskId != null) {
+            var task = taskRepository.findById(taskId).orElse(null);
+            timeLog.setTask(task);
+        }
+        if (bugId != null) {
+            var bug = bugRepository.findById(bugId).orElse(null);
+            timeLog.setBug(bug);
+        }
+
         timeLog.setUser(user);
         timeLogRepository.save(timeLog);
 

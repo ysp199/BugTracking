@@ -27,14 +27,24 @@
                   <form action="${pageContext.request.contextPath}/developer/timelog/save" method="post">
                     <div class="mb-3">
                       <label class="form-label">Task</label>
-                      <select name="taskId" class="form-select" required>
-                        <option value="">Select Task</option>
+                      <select name="taskId" class="form-select">
+                        <option value="">-- Select a Task --</option>
                         <c:forEach var="t" items="${tasks}">
                           <option value="${t.taskId}">${t.title} - ${t.module != null ? t.module.moduleName : ''}
                           </option>
                         </c:forEach>
                       </select>
                     </div>
+                    <div class="mb-3">
+                      <label class="form-label">Bug</label>
+                      <select name="bugId" class="form-select">
+                        <option value="">-- Select a Bug --</option>
+                        <c:forEach var="b" items="${bugs}">
+                          <option value="${b.bugId}">#${b.bugId} - ${b.title}</option>
+                        </c:forEach>
+                      </select>
+                    </div>
+                    <div class="text-muted small mb-3">Please select either a task or a bug (or both).</div>
                     <div class="mb-3">
                       <label class="form-label">Description</label>
                       <textarea name="description" class="form-control" rows="2" placeholder="What did you work on?"
@@ -63,6 +73,7 @@
                         <tr>
                           <th>Date</th>
                           <th>Task</th>
+                          <th>Bug</th>
                           <th>Description</th>
                           <th>Hours</th>
                         </tr>
@@ -72,13 +83,14 @@
                           <tr>
                             <td>${l.logDate}</td>
                             <td>${l.task != null ? l.task.title : '-'}</td>
+                            <td>${l.bug != null ? '#' += l.bug.bugId += ' - ' += l.bug.title : '-'}</td>
                             <td>${l.description}</td>
                             <td>${l.hoursSpent}</td>
                           </tr>
                         </c:forEach>
                         <c:if test="${empty logs}">
                           <tr>
-                            <td colspan="3" class="text-muted text-center">No logs yet.</td>
+                            <td colspan="5" class="text-muted text-center">No logs yet.</td>
                           </tr>
                         </c:if>
                       </tbody>

@@ -7,36 +7,38 @@ import java.time.LocalDateTime;
 @Table(name = "bugs")
 public class BugEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer bugId;
-    
-    @Column(nullable = false)
-    private String title;
-    
-    private String description;
-    
-    @Column(nullable = false)
-    private String severity;
-    
-    @Column(nullable = false)
-    private String priority;
-    
-    private String status;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer bugId;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+	@Column(nullable = false)
+	private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id")
-    private TaskEntity task;
+	private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reported_by")
-    private UserEntity reportedBy;
+	@Column(nullable = false)
+	private String severity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to")
-    private UserEntity assignedTo;
+	@Column(nullable = false)
+	private String priority;
+
+	private String status;
+
+	private String attachment;
+
+	private LocalDateTime createdAt = LocalDateTime.now();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "task_id")
+	private TaskEntity task;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "reported_by")
+	private UserEntity reportedBy;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "assigned_to")
+	private UserEntity assignedTo;
 
 	public Integer getBugId() {
 		return bugId;
@@ -86,6 +88,14 @@ public class BugEntity {
 		this.status = status;
 	}
 
+	public String getAttachment() {
+		return attachment;
+	}
+
+	public void setAttachment(String attachment) {
+		this.attachment = attachment;
+	}
+
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
@@ -118,6 +128,4 @@ public class BugEntity {
 		this.assignedTo = assignedTo;
 	}
 
-    
-    
 }

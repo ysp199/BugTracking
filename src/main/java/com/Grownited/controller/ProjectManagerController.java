@@ -23,7 +23,14 @@ import com.Grownited.repository.RoleRepository;
 import com.Grownited.repository.TaskRepository;
 import com.Grownited.service.UserService;
 
+import com.Grownited.entity.BugEntity;
+import com.Grownited.entity.BugHistoryEntity;
+import com.Grownited.repository.BugRepository;
+import com.Grownited.repository.BugHistoryRepository;
+
 import jakarta.servlet.http.HttpSession;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/pm")
@@ -43,6 +50,12 @@ public class ProjectManagerController {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private BugRepository bugRepository;
+
+    @Autowired
+    private BugHistoryRepository bugHistoryRepository;
 
     private UserEntity getLoggedInUser(HttpSession session) {
         return (UserEntity) session.getAttribute("loggedInUser");
@@ -292,5 +305,104 @@ public class ProjectManagerController {
 
         taskRepository.save(task);
         return "redirect:/pm/tasks";
+    }
+
+    // =====================================
+    // BUGS
+    // =====================================
+    @GetMapping("/bugs")
+    public String allBugs(HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
+            return "redirect:/login";
+        }
+        UserEntity user = getLoggedInUser(session);
+        if (user == null)
+            return "redirect:/login";
+
+        // PM sees ALL bugs, sorted newest first
+        List<BugEntity> allBugs = bugRepository.findAll().stream()
+                .sorted(Comparator.comparing(BugEntity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
+
+        model.addAttribute("bugs", allBugs);
+        model.addAttribute("page", "bugs");
+        return "pm/bugs";
+    }
+
+    @GetMapping("/bugs/{id}")
+    public String viewBugDetail(@PathVariable Integer id, HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
+            return "redirect:/login";
+        }
+
+        BugEntity bug = bugRepository.findById(id).orElse(null);
+        if (bug == null) {
+            return "redirect:/pm/bugs";
+        }
+
+        List<BugHistoryEntity> history = bugHistoryRepository.findByBug_BugId(id);
+
+        RoleEntity devRole = roleRepository.findByRoleName("DEVELOPER").orElse(null);
+        List<UserEntity> developers = List.of();
+        if (devRole != null) {
+            developers = userService.findUsersByRole(devRole.getRoleId());
+        }
+
+        model.addAttribute("bug", bug);
+        model.addAttribute("history", history);
+        model.addAttribute("developers", developers);
+        model.addAttribute("page", "bugs");
+        return "pm/bug-detail";
+    }
+
+    @PostMapping("/bugs/{id}/triage")
+    public String updateBugTriage(@PathVariable Integer id,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "priority", required = false) String priority,
+            @RequestParam(value = "assignedTo", required = false) Integer assignedToId,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
+            return "redirect:/login";
+        }
+        UserEntity user = getLoggedInUser(session);
+        if (user == null)
+            return "redirect:/login";
+
+        BugEntity bug = bugRepository.findById(id).orElse(null);
+        if (bug != null) {
+            String oldStatus = bug.getStatus();
+            boolean changed = false;
+
+            if (status != null && !status.isEmpty()) {
+                bug.setStatus(status);
+                changed = true;
+            }
+            if (priority != null && !priority.isEmpty()) {
+                bug.setPriority(priority);
+            }
+            if (assignedToId != null) {
+                UserEntity dev = userService.findById(assignedToId);
+                bug.setAssignedTo(dev);
+            } else if ("ASSIGNED".equals(status)) {
+                // Cannot be assigned without a developer selected
+                return "redirect:/pm/bugs/" + id + "?error=Must+select+a+developer+to+assign";
+            }
+
+            bugRepository.save(bug);
+
+            if (changed) {
+                BugHistoryEntity history = new BugHistoryEntity();
+                history.setBug(bug);
+                history.setOldStatus(oldStatus);
+                history.setNewStatus(status);
+                history.setChangedBy(user);
+                bugHistoryRepository.save(history);
+            }
+        }
+
+        return "redirect:/pm/bugs?success=Bug+Updated";
     }
 }

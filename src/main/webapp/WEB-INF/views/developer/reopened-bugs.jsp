@@ -11,11 +11,11 @@
       <div class="container-fluid">
         <div class="row">
           <jsp:include page="../common/sidebar-developer.jsp">
-            <jsp:param name="page" value="bugs" />
+            <jsp:param name="page" value="reopened-bugs" />
           </jsp:include>
           <main class="col-md-9 ms-sm-auto col-lg-10 px-4 py-3">
             <jsp:include page="../common/topbar.jsp">
-              <jsp:param name="title" value="My Bugs" />
+              <jsp:param name="title" value="Reopened Bugs" />
             </jsp:include>
             <c:if test="${success != null}">
               <div class="alert alert-success">${success}</div>
@@ -23,7 +23,8 @@
             <div class="card shadow-sm border-0 mt-3 rounded-4">
               <div
                 class="card-header bg-white d-flex justify-content-between align-items-center p-3 border-bottom rounded-top-4">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-bug text-primary me-2"></i>My Bug Reports & Assignments</h6>
+                <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-return-left text-danger me-2"></i>Bugs Reassigned by
+                  Tester</h6>
                 <a href="${pageContext.request.contextPath}/developer/bugs/add"
                   class="btn btn-primary btn-sm rounded-pill px-3">
                   <i class="bi bi-plus-lg me-1"></i>Report New Bug
@@ -84,4 +85,4 @@
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 
-    </html>	
+    </html>

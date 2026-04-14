@@ -23,7 +23,8 @@
                                 <h6 class="mb-0 fw-bold"><i class="bi bi-bug text-primary me-2"></i>Bug Details</h6>
                             </div>
                             <div class="card-body p-4">
-                                <form action="${pageContext.request.contextPath}/developer/bugs/save" method="POST">
+                                <form action="${pageContext.request.contextPath}/developer/bugs/save" method="POST"
+                                    enctype="multipart/form-data">
                                     <div class="row g-3">
                                         <div class="col-md-12">
                                             <label class="form-label fw-bold">Bug Title <span
@@ -35,9 +36,14 @@
                                         <div class="col-md-12">
                                             <label class="form-label fw-bold">Description <span
                                                     class="text-danger">*</span></label>
-                                            <textarea name="description" class="form-control rounded-4 px-3" rows="4"
-                                                required
-                                                placeholder="Detailed steps to reproduce, expected vs actual behavior..."></textarea>
+                                            <textarea name="description" class="form-control" rows="4" required
+                                                placeholder="Provide detailed steps to reproduce the bug"></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Attachment (Optional)</label>
+                                            <input type="file" name="file" class="form-control">
+                                            <div class="form-text">You can optionally upload a screenshot or log file.
+                                            </div>
                                         </div>
 
                                         <div class="col-md-6">

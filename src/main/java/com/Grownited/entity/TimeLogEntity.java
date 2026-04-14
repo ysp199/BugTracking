@@ -23,6 +23,10 @@ public class TimeLogEntity {
 	@JoinColumn(name = "user_id")
 	private UserEntity user;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "bug_id")
+	private BugEntity bug;
+
 	public Integer getLogId() {
 		return logId;
 	}
@@ -69,6 +73,14 @@ public class TimeLogEntity {
 
 	public void setUser(UserEntity user) {
 		this.user = user;
+	}
+
+	public BugEntity getBug() {
+		return bug;
+	}
+
+	public void setBug(BugEntity bug) {
+		this.bug = bug;
 	}
 
 }

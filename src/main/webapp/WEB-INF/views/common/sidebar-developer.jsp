@@ -26,7 +26,13 @@
         <li class="nav-item">
           <a class="nav-link ${param.page == 'bugs' ? 'active' : ''}"
             href="${pageContext.request.contextPath}/developer/bugs">
-            <i class="bi bi-bug me-2"></i>My Bugs
+            <i class="bi bi-bug me-2"></i>Bugs
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link ${param.page == 'reopened-bugs' ? 'active' : ''}"
+            href="${pageContext.request.contextPath}/developer/reopened-bugs">
+            <i class="bi bi-arrow-return-left me-2"></i>Reassigned Bugs
           </a>
         </li>
         <li class="nav-item">
