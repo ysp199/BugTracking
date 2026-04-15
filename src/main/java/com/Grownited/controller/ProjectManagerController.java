@@ -16,11 +16,13 @@ import com.Grownited.entity.ModuleEntity;
 import com.Grownited.entity.ProjectEntity;
 import com.Grownited.entity.RoleEntity;
 import com.Grownited.entity.TaskEntity;
+import com.Grownited.entity.TimeLogEntity;
 import com.Grownited.entity.UserEntity;
 import com.Grownited.repository.ModuleRepository;
 import com.Grownited.repository.ProjectRepository;
 import com.Grownited.repository.RoleRepository;
 import com.Grownited.repository.TaskRepository;
+import com.Grownited.repository.TimeLogRepository;
 import com.Grownited.service.UserService;
 
 import com.Grownited.entity.BugEntity;
@@ -55,6 +57,9 @@ public class ProjectManagerController {
     private BugRepository bugRepository;
 
     @Autowired
+    private TimeLogRepository timeLogRepository;
+
+    @Autowired
     private BugHistoryRepository bugHistoryRepository;
 
     private UserEntity getLoggedInUser(HttpSession session) {
@@ -84,7 +89,8 @@ public class ProjectManagerController {
     // PROJECTS
     // =====================================
     @GetMapping("/projects")
-    public String listProjects(HttpSession session, Model model) {
+    public String listProjects(@RequestParam(value = "status", required = false) String status, HttpSession session,
+            Model model) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
             return "redirect:/login";
@@ -94,6 +100,14 @@ public class ProjectManagerController {
             return "redirect:/login";
 
         List<ProjectEntity> projects = projectRepository.findByCreatedBy_UserId(user.getUserId());
+
+        if (status != null && !status.isEmpty()) {
+            projects = projects.stream()
+                    .filter(p -> status.equals(p.getStatus()))
+                    .collect(Collectors.toList());
+        }
+
+        model.addAttribute("selectedStatus", status);
         model.addAttribute("projects", projects);
         return "pm/projects";
     }
@@ -133,6 +147,37 @@ public class ProjectManagerController {
         return "redirect:/pm/projects";
     }
 
+    @GetMapping("/projects/view/{id}")
+    public String viewProjectDetail(@PathVariable("id") Integer id, HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER"))
+            return "redirect:/login";
+
+        ProjectEntity project = projectRepository.findById(id).orElse(null);
+        if (project == null)
+            return "redirect:/pm/projects";
+
+        List<ModuleEntity> modules = moduleRepository.findByProject_ProjectId(id);
+        model.addAttribute("project", project);
+        model.addAttribute("modules", modules);
+        return "pm/project-details";
+    }
+
+    @GetMapping("/projects/status/{id}")
+    public String updateProjectStatus(@PathVariable("id") Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER"))
+            return "redirect:/login";
+
+        ProjectEntity project = projectRepository.findById(id).orElse(null);
+        if (project != null) {
+            project.setStatus(action);
+            projectRepository.save(project);
+        }
+        return "redirect:/pm/projects/view/" + id;
+    }
+
     @GetMapping("/projects/edit/{id}")
     public String editProject(@PathVariable("id") Integer id, HttpSession session, Model model) {
         String sessionRole = (String) session.getAttribute("role");
@@ -149,6 +194,7 @@ public class ProjectManagerController {
     // =====================================
     @GetMapping("/modules")
     public String listModules(@RequestParam(value = "projectId", required = false) Integer projectId,
+            @RequestParam(value = "status", required = false) String status,
             HttpSession session, Model model) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
@@ -173,6 +219,13 @@ public class ProjectManagerController {
             }
         }
 
+        if (status != null && !status.isEmpty()) {
+            modules = modules.stream()
+                    .filter(m -> status.equals(m.getStatus()))
+                    .collect(Collectors.toList());
+        }
+
+        model.addAttribute("selectedStatus", status);
         model.addAttribute("projects", pmProjects);
         model.addAttribute("modules", modules);
         return "pm/modules";
@@ -210,11 +263,44 @@ public class ProjectManagerController {
         return "redirect:/pm/modules";
     }
 
+    @GetMapping("/modules/view/{id}")
+    public String viewModuleDetail(@PathVariable("id") Integer id, HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER"))
+            return "redirect:/login";
+
+        ModuleEntity module = moduleRepository.findById(id).orElse(null);
+        if (module == null)
+            return "redirect:/pm/modules";
+
+        List<TaskEntity> tasks = taskRepository.findByModule_ModuleId(id);
+        model.addAttribute("module", module);
+        model.addAttribute("tasks", tasks);
+        return "pm/module-details";
+    }
+
+    @GetMapping("/modules/status/{id}")
+    public String updateModuleStatus(@PathVariable("id") Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER"))
+            return "redirect:/login";
+
+        ModuleEntity module = moduleRepository.findById(id).orElse(null);
+        if (module != null) {
+            module.setStatus(action);
+            moduleRepository.save(module);
+        }
+        return "redirect:/pm/modules/view/" + id;
+    }
+
     // =====================================
     // TASKS
     // =====================================
     @GetMapping("/tasks")
-    public String listTasks(@RequestParam(value = "moduleId", required = false) Integer moduleId, HttpSession session,
+    public String listTasks(@RequestParam(value = "moduleId", required = false) Integer moduleId,
+            @RequestParam(value = "status", required = false) String status,
+            HttpSession session,
             Model model) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
@@ -245,6 +331,13 @@ public class ProjectManagerController {
             }
         }
 
+        if (status != null && !status.isEmpty()) {
+            tasks = tasks.stream()
+                    .filter(t -> status.equals(t.getStatus()))
+                    .collect(Collectors.toList());
+        }
+
+        model.addAttribute("selectedStatus", status);
         model.addAttribute("modules", pmModules);
         model.addAttribute("tasks", tasks);
         return "pm/tasks";
@@ -307,11 +400,50 @@ public class ProjectManagerController {
         return "redirect:/pm/tasks";
     }
 
+    @GetMapping("/tasks/view/{id}")
+    public String viewTaskDetail(@PathVariable("id") Integer id, HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER"))
+            return "redirect:/login";
+
+        TaskEntity task = taskRepository.findById(id).orElse(null);
+        if (task == null)
+            return "redirect:/pm/tasks";
+
+        List<TimeLogEntity> logs = timeLogRepository.findByTask_TaskId(id);
+        List<BugEntity> taskBugs = bugRepository.findByTask_TaskId(id);
+
+        if (taskBugs == null)
+            taskBugs = List.of();
+
+        model.addAttribute("task", task);
+        model.addAttribute("logs", logs);
+        model.addAttribute("taskBugs", taskBugs);
+        return "pm/task-details";
+    }
+
+    @GetMapping("/tasks/status/{id}")
+    public String updateTaskStatus(@PathVariable("id") Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER"))
+            return "redirect:/login";
+
+        TaskEntity task = taskRepository.findById(id).orElse(null);
+        if (task != null) {
+            task.setStatus(action);
+            taskRepository.save(task);
+        }
+        return "redirect:/pm/tasks/view/" + id;
+    }
+
     // =====================================
     // BUGS
     // =====================================
     @GetMapping("/bugs")
-    public String allBugs(HttpSession session, Model model) {
+    public String allBugs(@RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "priority", required = false) String priority,
+            HttpSession session, Model model) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
             return "redirect:/login";
@@ -320,12 +452,28 @@ public class ProjectManagerController {
         if (user == null)
             return "redirect:/login";
 
-        // PM sees ALL bugs, sorted newest first
-        List<BugEntity> allBugs = bugRepository.findAll().stream()
+        List<ProjectEntity> pmProjects = projectRepository.findByCreatedBy_UserId(user.getUserId());
+        List<Integer> pmProjectIds = pmProjects.stream().map(ProjectEntity::getProjectId).collect(Collectors.toList());
+
+        // PM sees bugs only from projects they manage, sorted newest first
+        List<BugEntity> pmBugs = bugRepository.findAll().stream()
+                .filter(b -> b.getTask() != null
+                        && b.getTask().getModule() != null
+                        && b.getTask().getModule().getProject() != null
+                        && pmProjectIds.contains(b.getTask().getModule().getProject().getProjectId()))
                 .sorted(Comparator.comparing(BugEntity::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
 
-        model.addAttribute("bugs", allBugs);
+        if (status != null && !status.isEmpty()) {
+            pmBugs = pmBugs.stream().filter(b -> status.equals(b.getStatus())).collect(Collectors.toList());
+        }
+        if (priority != null && !priority.isEmpty()) {
+            pmBugs = pmBugs.stream().filter(b -> priority.equals(b.getPriority())).collect(Collectors.toList());
+        }
+
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedPriority", priority);
+        model.addAttribute("bugs", pmBugs);
         model.addAttribute("page", "bugs");
         return "pm/bugs";
     }

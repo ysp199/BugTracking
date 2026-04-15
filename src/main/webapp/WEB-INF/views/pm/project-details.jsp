@@ -10,7 +10,7 @@
         <body>
             <div class="container-fluid">
                 <div class="row">
-                    <jsp:include page="../common/sidebar-admin.jsp">
+                    <jsp:include page="../common/sidebar-pm.jsp">
                         <jsp:param name="page" value="projects" />
                     </jsp:include>
                     <main class="col-md-9 ms-sm-auto col-lg-10 px-4 py-3">
@@ -33,16 +33,16 @@
                                             <ul class="dropdown-menu dropdown-menu-end shadow border-0"
                                                 style="z-index: 1050;">
                                                 <li><a class="dropdown-item fw-medium text-success"
-                                                        href="${pageContext.request.contextPath}/admin/projects/status/${project.projectId}?action=ACTIVE"><i
+                                                        href="${pageContext.request.contextPath}/pm/projects/status/${project.projectId}?action=ACTIVE"><i
                                                             class="bi bi-play-circle me-2"></i>Set to Active</a></li>
                                                 <li><a class="dropdown-item fw-medium text-warning"
-                                                        href="${pageContext.request.contextPath}/admin/projects/status/${project.projectId}?action=STOPPED"><i
+                                                        href="${pageContext.request.contextPath}/pm/projects/status/${project.projectId}?action=STOPPED"><i
                                                             class="bi bi-pause-circle me-2"></i>Set to Stopped</a></li>
                                                 <li>
                                                     <hr class="dropdown-divider">
                                                 </li>
                                                 <li><a class="dropdown-item fw-medium text-danger"
-                                                        href="${pageContext.request.contextPath}/admin/projects/status/${project.projectId}?action=REVOKED"><i
+                                                        href="${pageContext.request.contextPath}/pm/projects/status/${project.projectId}?action=REVOKED"><i
                                                             class="bi bi-x-circle me-2"></i>Revoke</a></li>
                                             </ul>
                                         </div>
@@ -104,7 +104,7 @@
                                                             <td class="text-muted text-truncate"
                                                                 style="max-width: 250px;">${m.description}</td>
                                                             <td>
-                                                                <a href="${pageContext.request.contextPath}/admin/modules/view/${m.moduleId}"
+                                                                <a href="${pageContext.request.contextPath}/pm/modules/view/${m.moduleId}"
                                                                     class="btn btn-sm btn-outline-primary rounded-pill px-3">View
                                                                     Details</a>
                                                             </td>
@@ -124,7 +124,7 @@
                             </div>
                         </div>
                         <div class="mt-4">
-                            <a href="${pageContext.request.contextPath}/admin/all-projects"
+                            <a href="${pageContext.request.contextPath}/pm/projects"
                                 class="btn btn-outline-secondary rounded-pill px-4">
                                 <i class="bi bi-arrow-left me-2"></i>Back to All Projects
                             </a>

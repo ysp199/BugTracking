@@ -20,14 +20,51 @@
                         <div class="row mt-4">
                             <div class="col-md-4">
                                 <div class="card shadow-sm border-0 rounded-4 mb-4">
-                                    <div class="card-header bg-white border-bottom p-3">
+                                    <div
+                                        class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0 fw-bold"><i
                                                 class="bi bi-info-circle text-primary me-2"></i>Module Info</h6>
+                                        <div class="dropdown">
+                                            <button
+                                                class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill"
+                                                type="button" data-bs-toggle="dropdown">
+                                                Change Status
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0"
+                                                style="z-index: 1050;">
+                                                <li><a class="dropdown-item fw-medium text-success"
+                                                        href="${pageContext.request.contextPath}/admin/modules/status/${module.moduleId}?action=ACTIVE"><i
+                                                            class="bi bi-play-circle me-2"></i>Set to Active</a></li>
+                                                <li><a class="dropdown-item fw-medium text-warning"
+                                                        href="${pageContext.request.contextPath}/admin/modules/status/${module.moduleId}?action=STOPPED"><i
+                                                            class="bi bi-pause-circle me-2"></i>Set to Stopped</a></li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li><a class="dropdown-item fw-medium text-danger"
+                                                        href="${pageContext.request.contextPath}/admin/modules/status/${module.moduleId}?action=REVOKED"><i
+                                                            class="bi bi-x-circle me-2"></i>Revoke</a></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
                                             <label class="text-muted small d-block mb-1">Module Name</label>
                                             <span class="fw-bold fs-5 text-dark">${module.moduleName}</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="text-muted small d-block mb-1">Status</label>
+                                            <c:choose>
+                                                <c:when test="${module.status == 'ACTIVE'}"><span
+                                                        class="badge bg-success-subtle text-success rounded-pill px-3">Active</span>
+                                                </c:when>
+                                                <c:when test="${module.status == 'COMPLETED'}"><span
+                                                        class="badge bg-primary-subtle text-primary rounded-pill px-3">Completed</span>
+                                                </c:when>
+                                                <c:otherwise><span
+                                                        class="badge bg-secondary-subtle text-secondary rounded-pill px-3">${module.status
+                                                        != null ? module.status : 'N/A'}</span></c:otherwise>
+                                            </c:choose>
                                         </div>
                                         <div class="mb-3">
                                             <label class="text-muted small d-block mb-1">Project</label>

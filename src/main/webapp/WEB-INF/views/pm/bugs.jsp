@@ -20,7 +20,39 @@
                         <c:if test="${param.success != null}">
                             <div class="alert alert-success">${param.success}</div>
                         </c:if>
-                        <div class="table-card mt-3">
+                        <div class="d-flex gap-2 mt-3 mb-2">
+                            <form action="${pageContext.request.contextPath}/pm/bugs" method="GET" class="d-flex gap-2">
+                                <select name="status" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="">All Statuses</option>
+                                    <option value="NEW" ${selectedStatus=='NEW' ? 'selected' : '' }>NEW</option>
+                                    <option value="ASSIGNED" ${selectedStatus=='ASSIGNED' ? 'selected' : '' }>ASSIGNED
+                                    </option>
+                                    <option value="IN_PROGRESS" ${selectedStatus=='IN_PROGRESS' ? 'selected' : '' }>
+                                        IN_PROGRESS</option>
+                                    <option value="RESOLVED" ${selectedStatus=='RESOLVED' ? 'selected' : '' }>RESOLVED
+                                    </option>
+                                    <option value="VERIFIED" ${selectedStatus=='VERIFIED' ? 'selected' : '' }>VERIFIED
+                                    </option>
+                                    <option value="REOPENED" ${selectedStatus=='REOPENED' ? 'selected' : '' }>REOPENED
+                                    </option>
+                                    <option value="CLOSED" ${selectedStatus=='CLOSED' ? 'selected' : '' }>CLOSED
+                                    </option>
+                                </select>
+                                <select name="priority" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="">All Priorities</option>
+                                    <option value="LOW" ${selectedPriority=='LOW' ? 'selected' : '' }>Low</option>
+                                    <option value="NORMAL" ${selectedPriority=='NORMAL' ? 'selected' : '' }>Normal
+                                    </option>
+                                    <option value="HIGH" ${selectedPriority=='HIGH' ? 'selected' : '' }>High</option>
+                                    <option value="URGENT" ${selectedPriority=='URGENT' ? 'selected' : '' }>Urgent
+                                    </option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                                <a href="${pageContext.request.contextPath}/pm/bugs"
+                                    class="btn btn-outline-secondary btn-sm">Reset</a>
+                            </form>
+                        </div>
+                        <div class="table-card">
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead>

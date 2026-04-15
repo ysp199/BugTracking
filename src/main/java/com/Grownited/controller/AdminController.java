@@ -245,6 +245,7 @@ public class AdminController {
 
         model.addAttribute("totalUsers", users.size());
         model.addAttribute("usersList", users);
+        model.addAttribute("projectsList", projects);
         model.addAttribute("totalProjects", projects.size());
         model.addAttribute("openBugs", openBugs);
         model.addAttribute("closedBugs", closedBugs);
@@ -338,6 +339,54 @@ public class AdminController {
         return "admin/projects";
     }
 
+    @GetMapping("projects/add")
+    public String addProject(HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN")) {
+            return "redirect:/login";
+        }
+
+        List<UserEntity> pmUsers = userService.findAllUsers().stream()
+                .filter(u -> "PROJECT_MANAGER".equalsIgnoreCase(userService.getUserRoleName(u.getUserId())))
+                .toList();
+
+        model.addAttribute("project", new ProjectEntity());
+        model.addAttribute("pmUsers", pmUsers);
+        model.addAttribute("page", "projects");
+        return "admin/add-project";
+    }
+
+    @PostMapping("projects/save")
+    public String saveProject(@ModelAttribute ProjectEntity project, @RequestParam("createdById") Integer createdById,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN")) {
+            return "redirect:/login";
+        }
+
+        UserEntity pm = userService.findById(createdById);
+        project.setCreatedBy(pm);
+        projectRepository.save(project);
+
+        return "redirect:/admin/all-projects";
+    }
+
+    @GetMapping("projects/status/{id}")
+    public String changeProjectStatus(@PathVariable Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN")) {
+            return "redirect:/login";
+        }
+
+        ProjectEntity project = projectRepository.findById(id).orElse(null);
+        if (project != null && action != null && !action.isEmpty()) {
+            project.setStatus(action.toUpperCase());
+            projectRepository.save(project);
+        }
+        return "redirect:/admin/all-projects";
+    }
+
     @GetMapping("bugs")
     public String showBugs(
             @RequestParam(required = false) String severity,
@@ -392,14 +441,13 @@ public class AdminController {
             @RequestParam(required = false) Integer projectId,
             HttpSession session,
             Model model) {
-
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("ADMIN")) {
             return "redirect:/login";
         }
 
         List<ModuleEntity> modules;
-        if (projectId != null) {
+        if (projectId != null && projectId > 0) {
             modules = moduleRepository.findByProject_ProjectId(projectId);
         } else {
             modules = moduleRepository.findAll();
@@ -412,19 +460,59 @@ public class AdminController {
         return "admin/modules";
     }
 
+    @GetMapping("modules/add")
+    public String addModule(HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN"))
+            return "redirect:/login";
+
+        model.addAttribute("module", new ModuleEntity());
+        model.addAttribute("projects", projectRepository.findAll());
+        model.addAttribute("page", "modules");
+        return "admin/add-module";
+    }
+
+    @PostMapping("modules/save")
+    public String saveModule(@ModelAttribute ModuleEntity module, @RequestParam("projectId") Integer projectId,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN"))
+            return "redirect:/login";
+
+        ProjectEntity project = projectRepository.findById(projectId).orElse(null);
+        module.setProject(project);
+        moduleRepository.save(module);
+
+        return "redirect:/admin/modules";
+    }
+
+    @GetMapping("modules/status/{id}")
+    public String changeModuleStatus(@PathVariable Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN"))
+            return "redirect:/login";
+
+        ModuleEntity module = moduleRepository.findById(id).orElse(null);
+        if (module != null && action != null && !action.isEmpty()) {
+            module.setStatus(action.toUpperCase());
+            moduleRepository.save(module);
+        }
+        return "redirect:/admin/modules";
+    }
+
     @GetMapping("tasks")
     public String showTasks(
             @RequestParam(required = false) Integer moduleId,
             HttpSession session,
             Model model) {
-
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("ADMIN")) {
             return "redirect:/login";
         }
 
         List<TaskEntity> tasks;
-        if (moduleId != null) {
+        if (moduleId != null && moduleId > 0) {
             tasks = taskRepository.findByModule_ModuleId(moduleId);
         } else {
             tasks = taskRepository.findAll();
@@ -435,6 +523,63 @@ public class AdminController {
         model.addAttribute("selectedModuleId", moduleId);
         model.addAttribute("page", "tasks");
         return "admin/tasks";
+    }
+
+    @GetMapping("tasks/add")
+    public String addTask(HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN"))
+            return "redirect:/login";
+
+        List<UserEntity> developers = userService.findAllUsers().stream()
+                .filter(u -> "DEVELOPER".equalsIgnoreCase(userService.getUserRoleName(u.getUserId())))
+                .toList();
+
+        model.addAttribute("task", new TaskEntity());
+        model.addAttribute("modules", moduleRepository.findAll());
+        model.addAttribute("developers", developers);
+        model.addAttribute("page", "tasks");
+        return "admin/add-task";
+    }
+
+    @PostMapping("tasks/save")
+    public String saveTask(@ModelAttribute TaskEntity task,
+            @RequestParam("moduleId") Integer moduleId,
+            @RequestParam(value = "assignedToId", required = false) Integer assignedToId,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN"))
+            return "redirect:/login";
+
+        ModuleEntity module = moduleRepository.findById(moduleId).orElse(null);
+        task.setModule(module);
+
+        if (assignedToId != null) {
+            UserEntity dev = userService.findById(assignedToId);
+            task.setAssignedTo(dev);
+        }
+
+        if (task.getStatus() == null || task.getStatus().isEmpty()) {
+            task.setStatus("NEW");
+        }
+
+        taskRepository.save(task);
+        return "redirect:/admin/tasks";
+    }
+
+    @GetMapping("tasks/status/{id}")
+    public String changeTaskStatus(@PathVariable Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("ADMIN"))
+            return "redirect:/login";
+
+        TaskEntity task = taskRepository.findById(id).orElse(null);
+        if (task != null && action != null && !action.isEmpty()) {
+            task.setStatus(action.toUpperCase());
+            taskRepository.save(task);
+        }
+        return "redirect:/admin/tasks";
     }
 
     @GetMapping("timelogs")

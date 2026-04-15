@@ -10,7 +10,7 @@
         <body>
             <div class="container-fluid">
                 <div class="row">
-                    <jsp:include page="../common/sidebar-admin.jsp">
+                    <jsp:include page="../common/sidebar-pm.jsp">
                         <jsp:param name="page" value="tasks" />
                     </jsp:include>
                     <main class="col-md-9 ms-sm-auto col-lg-10 px-4 py-3">
@@ -33,17 +33,17 @@
                                             <ul class="dropdown-menu dropdown-menu-end shadow border-0"
                                                 style="z-index: 1050;">
                                                 <li><a class="dropdown-item fw-medium text-success"
-                                                        href="${pageContext.request.contextPath}/admin/tasks/status/${task.taskId}?action=IN_PROGRESS"><i
+                                                        href="${pageContext.request.contextPath}/pm/tasks/status/${task.taskId}?action=IN_PROGRESS"><i
                                                             class="bi bi-play-circle me-2"></i>Set to In Progress</a>
                                                 </li>
                                                 <li><a class="dropdown-item fw-medium text-warning"
-                                                        href="${pageContext.request.contextPath}/admin/tasks/status/${task.taskId}?action=ON_HOLD"><i
+                                                        href="${pageContext.request.contextPath}/pm/tasks/status/${task.taskId}?action=ON_HOLD"><i
                                                             class="bi bi-pause-circle me-2"></i>Set to On Hold</a></li>
                                                 <li>
                                                     <hr class="dropdown-divider">
                                                 </li>
                                                 <li><a class="dropdown-item fw-medium text-danger"
-                                                        href="${pageContext.request.contextPath}/admin/tasks/status/${task.taskId}?action=REVOKED"><i
+                                                        href="${pageContext.request.contextPath}/pm/tasks/status/${task.taskId}?action=REVOKED"><i
                                                             class="bi bi-x-circle me-2"></i>Revoke</a></li>
                                             </ul>
                                         </div>
@@ -82,6 +82,46 @@
                                 </div>
                             </div>
                             <div class="col-md-8">
+                                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                                    <div class="card-header bg-white border-bottom p-3">
+                                        <h6 class="mb-0 fw-bold"><i class="bi bi-bug text-danger me-2"></i>Associated
+                                            Bugs</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">Bug Title</th>
+                                                        <th>Priority</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="b" items="${taskBugs}">
+                                                        <tr>
+                                                            <td class="ps-4 fw-bold text-dark">${b.title}</td>
+                                                            <td><span
+                                                                    class="badge bg-danger rounded-pill">${b.priority}</span>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="badge rounded-pill bg-${b.status == 'CLOSED' ? 'success' : 'warning'} px-3">${b.status}</span>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                    <c:if test="${empty taskBugs}">
+                                                        <tr>
+                                                            <td colspan="3" class="p-4 text-center text-muted">No bugs
+                                                                associated with this task.</td>
+                                                        </tr>
+                                                    </c:if>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="card shadow-sm border-0 rounded-4">
                                     <div class="card-header bg-white border-bottom p-3">
                                         <h6 class="mb-0 fw-bold"><i
@@ -124,7 +164,7 @@
                             </div>
                         </div>
                         <div class="mt-4">
-                            <a href="${pageContext.request.contextPath}/admin/tasks"
+                            <a href="${pageContext.request.contextPath}/pm/tasks"
                                 class="btn btn-outline-secondary rounded-pill px-4">
                                 <i class="bi bi-arrow-left me-2"></i>Back to Tasks
                             </a>

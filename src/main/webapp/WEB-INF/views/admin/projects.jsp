@@ -21,28 +21,35 @@
               <div
                 class="card-header bg-white d-flex justify-content-between align-items-center p-3 border-bottom rounded-top-4">
                 <h6 class="mb-0 fw-bold"><i class="bi bi-folder text-primary me-2"></i>All Projects</h6>
-                <!-- Filter Form -->
-                <form action="${pageContext.request.contextPath}/admin/all-projects" method="GET" class="d-flex gap-2">
-                  <select name="status" class="form-select form-select-sm rounded-pill" style="width: auto;">
-                    <option value="">All Statuses</option>
-                    <option value="ACTIVE" ${selectedStatus=='ACTIVE' ? 'selected' : '' }>Active</option>
-                    <option value="INACTIVE" ${selectedStatus=='INACTIVE' ? 'selected' : '' }>Inactive</option>
-                    <option value="COMPLETED" ${selectedStatus=='COMPLETED' ? 'selected' : '' }>Completed</option>
-                  </select>
-                  <select name="createdById" class="form-select form-select-sm rounded-pill" style="width: auto;">
-                    <option value="">All Creators</option>
-                    <c:forEach var="c" items="${creators}">
-                      <option value="${c.userId}" ${selectedCreatorId==c.userId ? 'selected' : '' }>${c.firstName}
-                        ${c.lastName}</option>
-                    </c:forEach>
-                  </select>
-                  <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Filter</button>
-                  <a href="${pageContext.request.contextPath}/admin/all-projects"
-                    class="btn btn-outline-secondary btn-sm rounded-pill px-3">Reset</a>
-                </form>
+                <!-- Filter Form & Actions -->
+                <div class="d-flex gap-3 align-items-center">
+                  <a href="${pageContext.request.contextPath}/admin/projects/add"
+                    class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add Project
+                  </a>
+                  <form action="${pageContext.request.contextPath}/admin/all-projects" method="GET"
+                    class="d-flex gap-2">
+                    <select name="status" class="form-select form-select-sm rounded-pill" style="width: auto;">
+                      <option value="">All Statuses</option>
+                      <option value="ACTIVE" ${selectedStatus=='ACTIVE' ? 'selected' : '' }>Active</option>
+                      <option value="INACTIVE" ${selectedStatus=='INACTIVE' ? 'selected' : '' }>Inactive</option>
+                      <option value="COMPLETED" ${selectedStatus=='COMPLETED' ? 'selected' : '' }>Completed</option>
+                    </select>
+                    <select name="createdById" class="form-select form-select-sm rounded-pill" style="width: auto;">
+                      <option value="">All Creators</option>
+                      <c:forEach var="c" items="${creators}">
+                        <option value="${c.userId}" ${selectedCreatorId==c.userId ? 'selected' : '' }>${c.firstName}
+                          ${c.lastName}</option>
+                      </c:forEach>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Filter</button>
+                    <a href="${pageContext.request.contextPath}/admin/all-projects"
+                      class="btn btn-outline-secondary btn-sm rounded-pill px-3">Reset</a>
+                  </form>
+                </div>
               </div>
               <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="min-height: calc(100vh - 220px);">
                   <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                       <tr>
@@ -75,8 +82,32 @@
                           <td>${p.createdBy != null ? p.createdBy.firstName += ' ' += p.createdBy.lastName
                             : '-'}</td>
                           <td class="pe-4">
-                            <a href="${pageContext.request.contextPath}/admin/projects/view/${p.projectId}"
-                              class="btn btn-sm btn-outline-primary rounded-pill px-3">View</a>
+                            <div class="btn-group">
+                              <a href="${pageContext.request.contextPath}/admin/projects/view/${p.projectId}"
+                                class="btn btn-sm btn-outline-primary rounded-start px-3">View</a>
+                              <button type="button"
+                                class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li>
+                                  <h6 class="dropdown-header text-muted">Change Status</h6>
+                                </li>
+                                <li><a class="dropdown-item fw-medium text-success"
+                                    href="${pageContext.request.contextPath}/admin/projects/status/${p.projectId}?action=ACTIVE"><i
+                                      class="bi bi-play-circle me-2"></i>Set to Active (Start)</a></li>
+                                <li><a class="dropdown-item fw-medium text-warning"
+                                    href="${pageContext.request.contextPath}/admin/projects/status/${p.projectId}?action=STOPPED"><i
+                                      class="bi bi-pause-circle me-2"></i>Set to Stopped</a></li>
+                                <li>
+                                  <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item fw-medium text-danger"
+                                    href="${pageContext.request.contextPath}/admin/projects/status/${p.projectId}?action=REVOKED"><i
+                                      class="bi bi-x-circle me-2"></i>Revoke Project</a></li>
+                              </ul>
+                            </div>
                           </td>
                         </tr>
                       </c:forEach>

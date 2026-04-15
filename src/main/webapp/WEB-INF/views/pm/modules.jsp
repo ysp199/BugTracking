@@ -22,17 +22,25 @@
             </c:if>
             <div class="d-flex gap-2 mt-3 mb-2">
               <form class="d-flex gap-2" action="${pageContext.request.contextPath}/pm/modules" method="get">
-                <select name="projectId" class="form-select form-select-sm" style="max-width:200px"
-                  onchange="this.form.submit()">
+                <select name="projectId" class="form-select form-select-sm" style="max-width:200px">
                   <option value="">All Projects</option>
                   <c:forEach var="p" items="${projects}">
                     <option value="${p.projectId}" ${param.projectId==p.projectId || selectedProject !=null &&
                       selectedProject.projectId==p.projectId ? 'selected' : '' }>${p.projectName}</option>
                   </c:forEach>
                 </select>
+                <select name="status" class="form-select form-select-sm" style="width: auto;">
+                  <option value="">All Statuses</option>
+                  <option value="ACTIVE" ${selectedStatus=='ACTIVE' ? 'selected' : '' }>Active</option>
+                  <option value="STOPPED" ${selectedStatus=='STOPPED' ? 'selected' : '' }>Stopped</option>
+                  <option value="REVOKED" ${selectedStatus=='REVOKED' ? 'selected' : '' }>Revoked</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                <a href="${pageContext.request.contextPath}/pm/modules"
+                  class="btn btn-outline-secondary btn-sm">Reset</a>
               </form>
               <a href="${pageContext.request.contextPath}/pm/modules/add<c:if test='${selectedProject != null}'>?projectId=${selectedProject.projectId}</c:if>"
-                class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Module</a>
+                class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg me-1"></i>Add Module</a>
             </div>
             <div class="table-card">
               <div class="table-responsive">
@@ -54,6 +62,8 @@
                         <td>${m.description}</td>
                         <td>${m.project != null ? m.project.projectName : '-'}</td>
                         <td>
+                          <a href="${pageContext.request.contextPath}/pm/modules/view/${m.moduleId}"
+                            class="btn btn-sm btn-outline-info">View</a>
                           <a href="${pageContext.request.contextPath}/pm/tasks?moduleId=${m.moduleId}"
                             class="btn btn-sm btn-outline-secondary">Tasks</a>
                         </td>

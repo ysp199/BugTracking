@@ -15,6 +15,8 @@ public class ModuleEntity {
 
 	private String description;
 
+	private String status;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "project_id")
 	private ProjectEntity project;
@@ -58,6 +60,14 @@ public class ModuleEntity {
 
 	public ProjectEntity getProject() {
 		return project;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public void setProject(ProjectEntity project) {
