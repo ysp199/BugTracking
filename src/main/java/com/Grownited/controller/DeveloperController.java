@@ -313,6 +313,59 @@ public class DeveloperController {
         return "developer/tasks";
     }
 
+    @GetMapping("/tasks/{id}")
+    public String viewTaskDetail(@PathVariable Integer id, HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("DEVELOPER")) {
+            return "redirect:/login";
+        }
+        UserEntity user = getLoggedInUser(session);
+        if (user == null)
+            return "redirect:/login";
+
+        var task = taskRepository.findById(id).orElse(null);
+        if (task == null || task.getAssignedTo() == null
+                || !task.getAssignedTo().getUserId().equals(user.getUserId())) {
+            return "redirect:/developer/tasks";
+        }
+
+        var taskBugs = bugRepository.findAll().stream()
+                .filter(b -> b.getTask() != null && b.getTask().getTaskId().equals(id))
+                .collect(Collectors.toList());
+
+        var taskLogs = timeLogRepository.findAll().stream()
+                .filter(l -> l.getTask() != null && l.getTask().getTaskId().equals(id))
+                .sorted(java.util.Comparator.comparing(TimeLogEntity::getLogDate).reversed())
+                .collect(Collectors.toList());
+
+        model.addAttribute("task", task);
+        model.addAttribute("taskBugs", taskBugs);
+        model.addAttribute("logs", taskLogs);
+        model.addAttribute("page", "tasks");
+        return "developer/task-details";
+    }
+
+    @GetMapping("/tasks/status/{id}")
+    public String changeTaskStatus(@PathVariable Integer id, @RequestParam("action") String action,
+            HttpSession session) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("DEVELOPER")) {
+            return "redirect:/login";
+        }
+        UserEntity user = getLoggedInUser(session);
+        if (user == null)
+            return "redirect:/login";
+
+        var task = taskRepository.findById(id).orElse(null);
+        if (task != null && task.getAssignedTo() != null && task.getAssignedTo().getUserId().equals(user.getUserId())) {
+            if (action != null && !action.isEmpty()) {
+                task.setStatus(action.toUpperCase());
+                taskRepository.save(task);
+            }
+        }
+        return "redirect:/developer/tasks/" + id;
+    }
+
     @GetMapping("/timelog")
     public String timelog(HttpSession session, Model model) {
         String sessionRole = (String) session.getAttribute("role");

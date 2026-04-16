@@ -96,6 +96,10 @@ public class AdminController {
             users = userService.findAllUsers();
         }
 
+        for (UserEntity u : users) {
+            u.setRoleName(userService.getUserRoleName(u.getUserId()));
+        }
+
         model.addAttribute("users", users);
         model.addAttribute("roles", roleService.findAssignableRoles());
         model.addAttribute("projects", projectRepository.findAll());
@@ -153,13 +157,14 @@ public class AdminController {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
 
-        // metadata
-        user.setActive(true);
-
-        if (existingUser == null) {
-            user.setCreatedAt(LocalDate.now());
-        } else {
+        if (existingUser != null) {
             user.setCreatedAt(existingUser.getCreatedAt());
+            user.setActive(existingUser.getActive());
+            user.setProfilePicURl(existingUser.getProfilePicURl());
+            user.setOtp(existingUser.getOtp());
+        } else {
+            user.setActive(true);
+            user.setCreatedAt(LocalDate.now());
         }
 
         userService.saveUser(user);
@@ -623,8 +628,21 @@ public class AdminController {
             return "redirect:/admin/all-projects";
         }
         List<ModuleEntity> modules = moduleRepository.findByProject_ProjectId(id);
+
+        List<TaskEntity> tasks = new java.util.ArrayList<>();
+        if (modules != null && !modules.isEmpty()) {
+            tasks = taskRepository.findByModuleIn(modules);
+        }
+
+        List<UserEntity> users = userService.findUsersByProject(id);
+        for (UserEntity u : users) {
+            u.setRoleName(userService.getUserRoleName(u.getUserId()));
+        }
+
         model.addAttribute("project", project);
         model.addAttribute("modules", modules);
+        model.addAttribute("tasks", tasks);
+        model.addAttribute("users", users);
         model.addAttribute("page", "projects");
         return "admin/project-details";
     }

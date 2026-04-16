@@ -58,6 +58,7 @@
                         <th class="ps-4">ID</th>
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Role</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Actions</th>
                       </tr>
@@ -68,6 +69,10 @@
                           <td class="ps-4 fw-medium text-muted">#${u.userId}</td>
                           <td class="fw-bold text-dark">${u.firstName} ${u.lastName}</td>
                           <td class="text-muted">${u.email}</td>
+                          <td>
+                            <span class="badge bg-secondary rounded-pill px-3 shadow-sm">${u.roleName != null ?
+                              u.roleName : 'N/A'}</span>
+                          </td>
                           <td><span
                               class="badge rounded-pill bg-${u.active ? 'success-subtle text-success' : 'secondary-subtle text-secondary'} px-3 border border-${u.active ? 'success' : 'secondary'} border-opacity-25 shadow-sm">${u.active
                               ? 'Active' :

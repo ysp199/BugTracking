@@ -26,7 +26,7 @@
         <!-- PROFILE IMAGE (Triggers Modal) -->
         <a href="#" data-bs-toggle="modal" data-bs-target="#profileModal" title="View Profile">
           <img
-            src="${not empty currentUser.profilePicURl ? currentUser.profilePicURl : pageContext.request.contextPath += '/assets/images/default-user.png'}"
+            src="${not empty currentUser.profilePicURl ? currentUser.profilePicURl : 'https://ui-avatars.com/api/?name=' += currentUser.firstName += '+' += currentUser.lastName += '&background=random'}"
             alt="Profile" class="rounded-circle" style="width:38px;height:38px;object-fit:cover;cursor:pointer;" />
         </a>
 
@@ -50,7 +50,7 @@
               </div>
               <div class="modal-body text-center">
                 <img
-                  src="${not empty currentUser.profilePicURl ? currentUser.profilePicURl : pageContext.request.contextPath += '/assets/images/default-user.png'}"
+                  src="${not empty currentUser.profilePicURl ? currentUser.profilePicURl : 'https://ui-avatars.com/api/?name=' += currentUser.firstName += '+' += currentUser.lastName += '&background=random'}"
                   class="rounded-circle mb-3"
                   style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #ddd;" />
                 <h5>${currentUser.firstName} ${currentUser.lastName}</h5>

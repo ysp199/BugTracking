@@ -39,11 +39,15 @@ public class UserService {
         return userRepository.save(user); // DO NOT encode here
     }
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     /*
      * =========================
      * DELETE USER (SAFE)
      * =========================
      */
+    @org.springframework.transaction.annotation.Transactional
     public void deleteUserById(Integer userId) {
 
         UserRoleEntity userRole = userRoleRepository.findByUser_UserId(userId);
@@ -53,6 +57,26 @@ public class UserService {
         }
 
         userRoleRepository.deleteByUser_UserId(userId);
+
+        // Nullify foreign keys to prevent constraint violations
+        entityManager.createQuery("UPDATE ProjectEntity p SET p.createdBy = null WHERE p.createdBy.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+        entityManager.createQuery("UPDATE TaskEntity t SET t.assignedTo = null WHERE t.assignedTo.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+        entityManager.createQuery("UPDATE BugEntity b SET b.assignedTo = null WHERE b.assignedTo.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+        entityManager.createQuery("UPDATE BugEntity b SET b.reportedBy = null WHERE b.reportedBy.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+        entityManager.createQuery("UPDATE TimeLogEntity t SET t.user = null WHERE t.user.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+        entityManager.createQuery("UPDATE BugHistoryEntity h SET h.changedBy = null WHERE h.changedBy.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+
+        // Delete associated notifications entirely Since they're only meant for that
+        // user
+        entityManager.createQuery("DELETE FROM NotificationEntity n WHERE n.user.userId = :userId")
+                .setParameter("userId", userId).executeUpdate();
+
         userRepository.deleteById(userId);
     }
 
@@ -132,12 +156,18 @@ public class UserService {
         RoleEntity role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        // Create mapping
-        UserRoleEntity userRole = new UserRoleEntity();
-        userRole.setUser(user);
-        userRole.setRole(role);
+        UserRoleEntity existingUserRole = userRoleRepository.findByUser_UserId(userId);
 
-        userRoleRepository.save(userRole);
+        if (existingUserRole != null) {
+            existingUserRole.setRole(role);
+            userRoleRepository.save(existingUserRole);
+        } else {
+            // Create mapping
+            UserRoleEntity userRole = new UserRoleEntity();
+            userRole.setUser(user);
+            userRole.setRole(role);
+            userRoleRepository.save(userRole);
+        }
     }
 
     public Integer getUserRoleId(Integer userId) {

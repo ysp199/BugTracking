@@ -71,6 +71,8 @@
                         <td>
                           <a href="${pageContext.request.contextPath}/pm/tasks/view/${t.taskId}"
                             class="btn btn-sm btn-outline-info">View</a>
+                          <a href="${pageContext.request.contextPath}/pm/tasks/edit/${t.taskId}"
+                            class="btn btn-sm btn-outline-primary">Edit</a>
                         </td>
                       </tr>
                     </c:forEach>

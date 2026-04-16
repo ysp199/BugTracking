@@ -32,8 +32,8 @@
                     <select name="status" class="form-select form-select-sm rounded-pill" style="width: auto;">
                       <option value="">All Statuses</option>
                       <option value="ACTIVE" ${selectedStatus=='ACTIVE' ? 'selected' : '' }>Active</option>
-                      <option value="INACTIVE" ${selectedStatus=='INACTIVE' ? 'selected' : '' }>Inactive</option>
-                      <option value="COMPLETED" ${selectedStatus=='COMPLETED' ? 'selected' : '' }>Completed</option>
+                      <option value="STOPPED" ${selectedStatus=='STOPPED' ? 'selected' : '' }>Stopped</option>
+                      <option value="REVOKED" ${selectedStatus=='REVOKED' ? 'selected' : '' }>Revoked</option>
                     </select>
                     <select name="createdById" class="form-select form-select-sm rounded-pill" style="width: auto;">
                       <option value="">All Creators</option>

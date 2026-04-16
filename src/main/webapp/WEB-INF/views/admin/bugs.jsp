@@ -39,9 +39,11 @@
                   </select>
                   <select name="status" class="form-select form-select-sm rounded-pill" style="width: auto;">
                     <option value="">All Statuses</option>
-                    <option value="OPEN" ${selectedStatus=='OPEN' ? 'selected' : '' }>Open</option>
+                    <option value="NEW" ${selectedStatus=='NEW' ? 'selected' : '' }>New</option>
+                    <option value="ASSIGNED" ${selectedStatus=='ASSIGNED' ? 'selected' : '' }>Assigned</option>
                     <option value="IN_PROGRESS" ${selectedStatus=='IN_PROGRESS' ? 'selected' : '' }>In Progress</option>
-                    <option value="RESOLVED" ${selectedStatus=='RESOLVED' ? 'selected' : '' }>Resolved</option>
+                    <option value="FIXED" ${selectedStatus=='FIXED' ? 'selected' : '' }>Fixed</option>
+                    <option value="REOPENED" ${selectedStatus=='REOPENED' ? 'selected' : '' }>Reopened</option>
                     <option value="CLOSED" ${selectedStatus=='CLOSED' ? 'selected' : '' }>Closed</option>
                   </select>
                   <select name="assignedToId" class="form-select form-select-sm rounded-pill" style="width: auto;">

@@ -121,6 +121,105 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Project Tasks Card -->
+                                <div class="card shadow-sm border-0 rounded-4 mt-4">
+                                    <div
+                                        class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold"><i
+                                                class="bi bi-list-task text-primary me-2"></i>Project Tasks</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">ID</th>
+                                                        <th>Task Name</th>
+                                                        <th>Assigned To</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="t" items="${tasks}">
+                                                        <tr>
+                                                            <td class="ps-4 text-muted">#${t.taskId}</td>
+                                                            <td class="fw-bold text-dark">${t.title}</td>
+                                                            <td class="text-muted">
+                                                                <c:if test="${t.assignedTo != null}">
+                                                                    ${t.assignedTo.firstName} ${t.assignedTo.lastName}
+                                                                </c:if>
+                                                                <c:if test="${t.assignedTo == null}">Unassigned</c:if>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="badge rounded-pill bg-${t.status == 'COMPLETED' ? 'success' : (t.status == 'IN_PROGRESS' ? 'primary' : 'warning')}-subtle text-${t.status == 'COMPLETED' ? 'success' : (t.status == 'IN_PROGRESS' ? 'primary' : 'warning')} px-3">${t.status}</span>
+                                                            </td>
+                                                            <td>
+                                                                <a href="${pageContext.request.contextPath}/admin/tasks/view/${t.taskId}"
+                                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3">View</a>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                    <c:if test="${empty tasks}">
+                                                        <tr>
+                                                            <td colspan="5" class="p-4 text-center text-muted">No tasks
+                                                                exist in these modules.</td>
+                                                        </tr>
+                                                    </c:if>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Project Users Card -->
+                                <div class="card shadow-sm border-0 rounded-4 mt-4 mb-4">
+                                    <div
+                                        class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold"><i class="bi bi-people text-primary me-2"></i>Project
+                                            Users</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">ID</th>
+                                                        <th>Name</th>
+                                                        <th>Email</th>
+                                                        <th>Role</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="u" items="${users}">
+                                                        <tr>
+                                                            <td class="ps-4 text-muted">#${u.userId}</td>
+                                                            <td class="fw-bold text-dark">${u.firstName} ${u.lastName}
+                                                            </td>
+                                                            <td class="text-muted">${u.email}</td>
+                                                            <td><span
+                                                                    class="badge bg-secondary rounded-pill px-3 shadow-sm">${u.roleName
+                                                                    != null ? u.roleName : 'N/A'}</span></td>
+                                                            <td>
+                                                                <a href="${pageContext.request.contextPath}/admin/users/view/${u.userId}"
+                                                                    class="btn btn-sm btn-outline-info rounded-pill px-3">Profile</a>
+                                                            </td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                    <c:if test="${empty users}">
+                                                        <tr>
+                                                            <td colspan="5" class="p-4 text-center text-muted">No users
+                                                                found.</td>
+                                                        </tr>
+                                                    </c:if>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="mt-4">

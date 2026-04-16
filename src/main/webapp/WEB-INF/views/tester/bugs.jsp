@@ -36,6 +36,7 @@
                       <th>Severity</th>
                       <th>Status</th>
                       <th>Assigned To</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -51,11 +52,15 @@
                         <td><span class="badge bg-${b.status == 'CLOSED' ? 'success' : 'primary'}">${b.status}</span>
                         </td>
                         <td>${b.assignedTo != null ? b.assignedTo.firstName : '-'}</td>
+                        <td>
+                          <a href="${pageContext.request.contextPath}/tester/bugs/${b.bugId}"
+                            class="btn btn-sm btn-outline-info">View</a>
+                        </td>
                       </tr>
                     </c:forEach>
                     <c:if test="${empty bugs}">
                       <tr>
-                        <td colspan="6" class="text-muted text-center py-4">No bugs reported yet.</td>
+                        <td colspan="7" class="text-muted text-center py-4">No bugs reported yet.</td>
                       </tr>
                     </c:if>
                   </tbody>

@@ -170,7 +170,7 @@
                               <td class="ps-3 border-bottom-0 pb-2 pt-2">
                                 <div class="d-flex align-items-center">
                                   <img
-                                    src="${not empty u.profilePicURl ? u.profilePicURl : pageContext.request.contextPath += '/assets/images/default-user.png'}"
+                                    src="${not empty u.profilePicURl ? u.profilePicURl : 'https://ui-avatars.com/api/?name=' += u.firstName += '+' += u.lastName += '&background=random'}"
                                     class="rounded-circle me-3 shadow-sm" alt="Avatar"
                                     style="width: 36px; height: 36px; object-fit: cover;">
                                   <span class="fw-medium">${u.firstName} ${u.lastName}</span>

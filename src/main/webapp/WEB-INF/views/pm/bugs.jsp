@@ -29,23 +29,20 @@
                                     </option>
                                     <option value="IN_PROGRESS" ${selectedStatus=='IN_PROGRESS' ? 'selected' : '' }>
                                         IN_PROGRESS</option>
-                                    <option value="RESOLVED" ${selectedStatus=='RESOLVED' ? 'selected' : '' }>RESOLVED
-                                    </option>
-                                    <option value="VERIFIED" ${selectedStatus=='VERIFIED' ? 'selected' : '' }>VERIFIED
-                                    </option>
+                                    <option value="FIXED" ${selectedStatus=='FIXED' ? 'selected' : '' }>FIXED</option>
                                     <option value="REOPENED" ${selectedStatus=='REOPENED' ? 'selected' : '' }>REOPENED
                                     </option>
                                     <option value="CLOSED" ${selectedStatus=='CLOSED' ? 'selected' : '' }>CLOSED
                                     </option>
                                 </select>
-                                <select name="priority" class="form-select form-select-sm" style="width: auto;">
-                                    <option value="">All Priorities</option>
-                                    <option value="LOW" ${selectedPriority=='LOW' ? 'selected' : '' }>Low</option>
-                                    <option value="NORMAL" ${selectedPriority=='NORMAL' ? 'selected' : '' }>Normal
+                                <select name="severity" class="form-select form-select-sm" style="width: auto;">
+                                    <option value="">All Severities</option>
+                                    <option value="CRITICAL" ${selectedSeverity=='CRITICAL' ? 'selected' : '' }>CRITICAL
                                     </option>
-                                    <option value="HIGH" ${selectedPriority=='HIGH' ? 'selected' : '' }>High</option>
-                                    <option value="URGENT" ${selectedPriority=='URGENT' ? 'selected' : '' }>Urgent
+                                    <option value="HIGH" ${selectedSeverity=='HIGH' ? 'selected' : '' }>HIGH</option>
+                                    <option value="MEDIUM" ${selectedSeverity=='MEDIUM' ? 'selected' : '' }>MEDIUM
                                     </option>
+                                    <option value="LOW" ${selectedSeverity=='LOW' ? 'selected' : '' }>LOW</option>
                                 </select>
                                 <button type="submit" class="btn btn-primary btn-sm">Filter</button>
                                 <a href="${pageContext.request.contextPath}/pm/bugs"

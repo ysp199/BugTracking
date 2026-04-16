@@ -437,12 +437,82 @@ public class ProjectManagerController {
         return "redirect:/pm/tasks/view/" + id;
     }
 
+    @GetMapping("/tasks/edit/{id}")
+    public String editTask(@PathVariable("id") Integer id, HttpSession session, Model model) {
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
+            return "redirect:/login";
+        }
+        UserEntity user = getLoggedInUser(session);
+        if (user == null)
+            return "redirect:/login";
+
+        TaskEntity task = taskRepository.findById(id).orElse(null);
+        if (task == null) {
+            return "redirect:/pm/tasks";
+        }
+
+        List<ProjectEntity> pmProjects = projectRepository.findByCreatedBy_UserId(user.getUserId());
+        List<ModuleEntity> pmModules;
+        if (pmProjects.isEmpty()) {
+            pmModules = List.of();
+        } else {
+            pmModules = moduleRepository.findByProjectIn(pmProjects);
+        }
+
+        RoleEntity devRole = roleRepository.findByRoleName("DEVELOPER").orElse(null);
+        List<UserEntity> developers = List.of();
+        if (devRole != null) {
+            developers = userService.findUsersByRole(devRole.getRoleId());
+        }
+
+        model.addAttribute("task", task);
+        model.addAttribute("modules", pmModules);
+        model.addAttribute("developers", developers);
+        return "pm/edit-task";
+    }
+
+    @PostMapping("/tasks/edit")
+    public String updateTask(@ModelAttribute TaskEntity taskUpdate,
+            @RequestParam("moduleId") Integer moduleId,
+            @RequestParam(value = "assignedTo", required = false) Integer assignedToId,
+            HttpSession session) {
+
+        String sessionRole = (String) session.getAttribute("role");
+        if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
+            return "redirect:/login";
+        }
+
+        TaskEntity existingTask = taskRepository.findById(taskUpdate.getTaskId()).orElse(null);
+        if (existingTask == null) {
+            return "redirect:/pm/tasks";
+        }
+
+        ModuleEntity module = moduleRepository.findById(moduleId).orElse(null);
+        existingTask.setModule(module);
+        existingTask.setTitle(taskUpdate.getTitle());
+        existingTask.setDescription(taskUpdate.getDescription());
+        existingTask.setStatus(taskUpdate.getStatus());
+        existingTask.setPriority(taskUpdate.getPriority());
+        existingTask.setEstimatedHours(taskUpdate.getEstimatedHours());
+
+        if (assignedToId != null) {
+            UserEntity assignee = userService.findById(assignedToId);
+            existingTask.setAssignedTo(assignee);
+        } else {
+            existingTask.setAssignedTo(null);
+        }
+
+        taskRepository.save(existingTask);
+        return "redirect:/pm/tasks?success=Task+Updated";
+    }
+
     // =====================================
     // BUGS
     // =====================================
     @GetMapping("/bugs")
     public String allBugs(@RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "priority", required = false) String priority,
+            @RequestParam(value = "severity", required = false) String severity,
             HttpSession session, Model model) {
         String sessionRole = (String) session.getAttribute("role");
         if (sessionRole == null || !sessionRole.equals("PROJECT_MANAGER")) {
@@ -467,12 +537,12 @@ public class ProjectManagerController {
         if (status != null && !status.isEmpty()) {
             pmBugs = pmBugs.stream().filter(b -> status.equals(b.getStatus())).collect(Collectors.toList());
         }
-        if (priority != null && !priority.isEmpty()) {
-            pmBugs = pmBugs.stream().filter(b -> priority.equals(b.getPriority())).collect(Collectors.toList());
+        if (severity != null && !severity.isEmpty()) {
+            pmBugs = pmBugs.stream().filter(b -> severity.equals(b.getSeverity())).collect(Collectors.toList());
         }
 
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("selectedPriority", priority);
+        model.addAttribute("selectedSeverity", severity);
         model.addAttribute("bugs", pmBugs);
         model.addAttribute("page", "bugs");
         return "pm/bugs";
