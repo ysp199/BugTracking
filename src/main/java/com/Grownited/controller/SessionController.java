@@ -197,7 +197,7 @@ public class SessionController {
 	}
 
 	@PostMapping("forgot-password")
-	public String forgotPassword(@RequestParam String email, Model model) {
+	public String forgotPassword(@RequestParam String email, Model model, HttpSession session) {
 
 		UserEntity user = userService.findByEmail(email);
 
@@ -218,14 +218,38 @@ public class SessionController {
 			return "authentication/ForgetPassword";
 		}
 
-		model.addAttribute("email", email);
-		model.addAttribute("message", "An OTP has been sent to your email.");
-		return "authentication/VerifyOtp";
+		// Store pending email in session for OTP verification
+		session.setAttribute("otpPendingEmail", email);
+		// Clear any previous verified flag
+		session.removeAttribute("otpVerifiedEmail");
+		// Store success message in session for the redirect
+		session.setAttribute("otpMessage", "An OTP has been sent to your email.");
+
+		// REDIRECT to verify-otp page (forces a new GET request)
+		return "redirect:/verify-otp";
 	}
 
 	@GetMapping("verify-otp")
-	public String showVerifyOtpPage(@RequestParam String email, Model model) {
+	public String showVerifyOtpPage(Model model, HttpSession session) {
+		// Read email from session (set during forgot-password)
+		String email = (String) session.getAttribute("otpPendingEmail");
+		if (email == null) {
+			// Also check if OTP was already verified (user refreshing)
+			email = (String) session.getAttribute("otpVerifiedEmail");
+		}
+		if (email == null) {
+			return "redirect:/forgetPassword";
+		}
+
 		model.addAttribute("email", email);
+
+		// Check for flash message from redirect
+		String flashMessage = (String) session.getAttribute("otpMessage");
+		if (flashMessage != null) {
+			model.addAttribute("message", flashMessage);
+			session.removeAttribute("otpMessage");
+		}
+
 		return "authentication/VerifyOtp";
 	}
 
@@ -233,7 +257,8 @@ public class SessionController {
 	public String verifyOtp(
 			@RequestParam String email,
 			@RequestParam String otp,
-			Model model) {
+			Model model,
+			HttpSession session) {
 
 		boolean valid = otpService.validateOtp(email, otp);
 
@@ -247,14 +272,33 @@ public class SessionController {
 		UserEntity user = userService.findByEmail(email);
 		otpService.clearOtp(user);
 
-		model.addAttribute("email", email);
-		model.addAttribute("message", "OTP verified! Set your new password.");
-		return "authentication/ResetPassword";
+		// Mark OTP as verified in session
+		session.setAttribute("otpVerifiedEmail", email);
+		session.removeAttribute("otpPendingEmail");
+
+		// Store success message for the redirect
+		session.setAttribute("resetMessage", "OTP verified! Set your new password.");
+
+		// REDIRECT to reset-password page (forces a new GET request)
+		return "redirect:/reset-password";
 	}
 
 	@GetMapping("reset-password")
-	public String showResetPasswordPage(@RequestParam String email, Model model) {
-		model.addAttribute("email", email);
+	public String showResetPasswordPage(Model model, HttpSession session) {
+		// Guard: only allow access if OTP was verified
+		String verifiedEmail = (String) session.getAttribute("otpVerifiedEmail");
+		if (verifiedEmail == null) {
+			return "redirect:/forgetPassword";
+		}
+		model.addAttribute("email", verifiedEmail);
+
+		// Check for flash message from redirect
+		String flashMessage = (String) session.getAttribute("resetMessage");
+		if (flashMessage != null) {
+			model.addAttribute("message", flashMessage);
+			session.removeAttribute("resetMessage");
+		}
+
 		return "authentication/ResetPassword";
 	}
 
@@ -263,7 +307,14 @@ public class SessionController {
 			@RequestParam String email,
 			@RequestParam String newPassword,
 			@RequestParam String confirmPassword,
-			Model model) {
+			Model model,
+			HttpSession session) {
+
+		// Guard: only allow reset if OTP was verified for this email
+		String verifiedEmail = (String) session.getAttribute("otpVerifiedEmail");
+		if (verifiedEmail == null || !verifiedEmail.equals(email)) {
+			return "redirect:/forgetPassword";
+		}
 
 		if (!newPassword.equals(confirmPassword)) {
 			model.addAttribute("email", email);
@@ -279,6 +330,9 @@ public class SessionController {
 		}
 
 		userService.updatePassword(user, newPassword);
+
+		// Clear the verified flag after successful reset
+		session.removeAttribute("otpVerifiedEmail");
 
 		model.addAttribute("success", "Password reset successfully! Please login.");
 		return "authentication/Login";

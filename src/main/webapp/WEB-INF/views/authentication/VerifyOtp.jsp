@@ -5,7 +5,7 @@
 
         <head>
             <meta charset="UTF-8">
-            <title>BugTracker - Reset Password</title>
+            <title>BugTracker - Verify OTP</title>
 
             <!-- Bootstrap 5 CDN -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -33,7 +33,7 @@
                     z-index: 0;
                 }
 
-                .reset-card {
+                .otp-card {
                     border-radius: 15px;
                     padding: 40px 30px;
                     /* Glassmorphism effect */
@@ -78,11 +78,11 @@
 
         <body>
 
-            <div class="reset-card">
+            <div class="otp-card">
                 <div class="text-center mb-4">
-                    <i class="bi bi-key-fill brand-icon"></i>
-                    <h3 class="fw-bold mt-2 text-dark">Reset Password</h3>
-                    <p class="text-muted small">Create a secure new password.</p>
+                    <i class="bi bi-shield-check brand-icon text-success"></i>
+                    <h3 class="fw-bold mt-2 text-dark">Verify OTP</h3>
+                    <p class="text-muted small">Enter the 6-digit security code sent to your email.</p>
                 </div>
 
                 <!-- Success Message -->
@@ -99,42 +99,37 @@
                     </div>
                 </c:if>
 
-                <form action="${pageContext.request.contextPath}/reset-password" method="post">
+                <form action="${pageContext.request.contextPath}/verify-otp" method="post">
                     <!-- Hidden Email -->
                     <input type="hidden" name="email" value="${email}">
 
-                    <!-- New Password -->
-                    <div class="mb-3">
-                        <label class="form-label fw-medium text-dark small">New Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
-                            <input type="password" name="newPassword" class="form-control bg-light" minlength="6"
-                                placeholder="Choose a secure password" required>
-                        </div>
-                    </div>
-
-                    <!-- Confirm Password -->
+                    <!-- OTP -->
                     <div class="mb-4">
-                        <label class="form-label fw-medium text-dark small">Confirm Password</label>
+                        <label class="form-label fw-medium text-dark small">One-Time Password</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light text-muted"><i class="bi bi-shield-check"></i></span>
-                            <input type="password" name="confirmPassword" class="form-control bg-light" minlength="6"
-                                placeholder="Retype your new password" required>
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-123"></i></span>
+                            <input type="text" name="otp" class="form-control bg-light text-center fs-5 fw-bold"
+                                maxlength="6" placeholder="000000" required>
                         </div>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="d-grid mb-4">
                         <button type="submit" class="btn btn-primary py-2 fw-medium shadow-sm">
-                            Reset Password
+                            Verify Connection
                         </button>
                     </div>
 
                     <!-- Links -->
                     <div class="text-center">
+                        <p class="mb-2 link-small">
+                            Didn't receive the code?
+                            <a href="${pageContext.request.contextPath}/forgetPassword"
+                                class="text-primary fw-medium text-decoration-none">Resend OTP</a>
+                        </p>
                         <p class="mb-0 link-small">
                             <a href="${pageContext.request.contextPath}/login"
-                                class="text-primary fw-medium text-decoration-none"><i
+                                class="text-muted text-decoration-none hover-primary"><i
                                     class="bi bi-arrow-left me-1"></i> Back to Login</a>
                         </p>
                     </div>
